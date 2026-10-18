@@ -240,3 +240,45 @@ a.card{color:inherit;text-decoration:none}
 .card .stretch:focus-visible{outline:none}
 @media (max-width:600px){.logo{height:52px}.idbar .meta{display:none}.idbar .wrap{flex-wrap:nowrap}.top .wrap{padding-block:16px 0}}
 .page-head h1{color:var(--ink)}
+
+/* UX pass — Oct 2026 */
+/* Detail page: comfortable reading measure and size for long axis text */
+.axis .a,.summary-box>div{max-width:70ch;font-size:15.5px;line-height:1.85}
+/* Jumping from the axes list highlights the target axis */
+.axis:target{background:var(--accent-soft);border-radius:8px;box-shadow:0 0 0 10px var(--accent-soft)}
+/* Desktop: facts scroll away, the axes list stays in view */
+@media (min-width:901px){
+  .detail{align-items:stretch}
+  .detail .side{position:static;align-content:start}
+  .detail .side>.panel{position:sticky;top:12px}
+}
+/* Mobile detail: axes come right after the summary card; quick facts follow them.
+   The axes list is hidden on small screens, where it would sit after the content. */
+@media (max-width:900px){.detail .side{order:1}.detail .side>.panel{display:none}}
+/* Mobile home: compact stats so search appears above the fold */
+@media (max-width:600px){
+  .stats{margin-block:16px}
+  .stat{flex-basis:100px;padding:10px 12px}
+  .stat .v{font-size:22px}
+  .stat .l{font-size:11.5px;line-height:1.4}
+}
+/* Cards: easier-to-read summary, clearer hover */
+.card .sum{font-size:14px;line-height:1.75}
+.card:hover{border-color:var(--accent)}
+@media (prefers-reduced-motion:reduce){.card:hover{transform:none}}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+/* Audit fixes (Vercel Web Interface Guidelines + UI/UX Pro Max) */
+/* iOS zooms into inputs smaller than 16px; keep fields at 16px on touch screens */
+@media (pointer:coarse),(max-width:900px){.field,.search{font-size:16px}}
+/* Remove the double-tap delay on taps */
+a,button,input,select,label,.card{touch-action:manipulation}
+/* Compare toggle sits inside a clickable card: give it a real target (≥32px) */
+.card .cmpbox{min-height:32px;padding:4px 8px;margin:-4px -8px;border-radius:6px}
+.card .cmpbox input{width:18px;height:18px}
+.card .cmpbox:hover{background:var(--sunk)}
+/* Clear keyboard focus on cards (the whole card is the link) */
+.card:has(.stretch:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+/* Field filter bars: taller targets */
+.bar .track{height:28px}.bar .name{line-height:28px}
+/* 84+ cards: let the browser skip rendering off-screen ones */
+.grid>.card{content-visibility:auto;contain-intrinsic-size:auto 300px}
