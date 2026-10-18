@@ -16,6 +16,8 @@ const links = [
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#F4F6FA" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0F1424" media="(prefers-color-scheme: dark)" />
   <title>{full}</title>
   <meta name="description" content={description} />
   <link rel="icon" href={withBase('favicon.svg')} type="image/svg+xml" />
@@ -37,7 +39,7 @@ const links = [
       </a>
       <div class="end">
         <span class="meta">مقرر إدارة المنح · بإشراف د. عبدالكريم الصالح</span>
-        <button class="theme-btn" type="button" id="themeBtn" aria-label="تبديل المظهر">المظهر: تلقائي</button>
+        <button class="theme-btn" type="button" id="themeBtn">المظهر: تلقائي</button>
       </div>
     </div>
     <div class="stripe" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -71,7 +73,11 @@ const links = [
     const btn = document.getElementById('themeBtn')!;
     const label = { auto: 'تلقائي', light: 'فاتح', dark: 'داكن' } as const;
     let mode = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) ?? 'auto';
-    const paint = () => (btn.textContent = 'المظهر: ' + label[mode]);
+    const metas = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
+    const paint = () => {
+      btn.textContent = 'المظهر: ' + label[mode];
+      metas.forEach((m, i) => (m.content = mode === 'auto' ? (i ? '#0F1424' : '#F4F6FA') : mode === 'dark' ? '#0F1424' : '#F4F6FA'));
+    };
     paint();
     btn.addEventListener('click', () => {
       mode = mode === 'auto' ? 'light' : mode === 'light' ? 'dark' : 'auto';

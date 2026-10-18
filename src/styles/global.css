@@ -282,3 +282,6 @@ a,button,input,select,label,.card{touch-action:manipulation}
 .bar .track{height:28px}.bar .name{line-height:28px}
 /* 84+ cards: let the browser skip rendering off-screen ones */
 .grid>.card{content-visibility:auto;contain-intrinsic-size:auto 300px}
+/* "Show more" under the results grid */
+.more-wrap{display:flex;justify-content:center;margin-top:20px}
+.more-wrap .btn{min-height:44px;padding-inline:24px}

@@ -73,6 +73,7 @@ const stats: [string | number, string, string?][] = [
         </div>
       </div>
       <div class="grid" id="grid">{entries.map((e) => <DonorCard entry={e} />)}</div>
+      <div class="more-wrap"><button class="btn" type="button" id="moreBtn" hidden>عرض المزيد</button></div>
       <div class="msg info" id="noRes" hidden>لا توجد جهات تطابق هذه التصفية. جرّب إزالة أحد المرشحات.</div>
     </div>
   </div>
@@ -102,8 +103,12 @@ const stats: [string | number, string, string?][] = [
   q.value = f.q; sortSel.value = f.sort;
   selects.forEach((s) => (s.value = (f as any)[s.dataset.f!] || ''));
 
+  const PAGE = 24;
+  let limit = PAGE;
+  const moreBtn = document.getElementById('moreBtn') as HTMLButtonElement;
   const has = (el: HTMLElement, key: string, v: string) => (el.dataset[key] || '').split('|').includes(v);
-  function apply() {
+  function apply(keepLimit = false) {
+    if (!keepLimit) limit = PAGE;
     const toks = tokens(f.q);
     if (toks.length) loadIndex();
     let shown = 0;
@@ -121,8 +126,14 @@ const stats: [string | number, string, string?][] = [
       name: (a, b) => a.dataset.name!.localeCompare(b.dataset.name!, 'ar'),
       max: (a, b) => +b.dataset.max! - +a.dataset.max! || +a.dataset.code! - +b.dataset.code!,
     };
-    [...cards].sort(by[f.sort] || by.code).forEach((el) => grid.appendChild(el));
-    document.getElementById('resCount')!.textContent = `${shown} من ${cards.length} جهة`;
+    const sorted = [...cards].sort(by[f.sort] || by.code);
+    sorted.forEach((el) => grid.appendChild(el));
+    let i = 0;
+    for (const el of sorted) { if (el.hidden) continue; if (++i > limit) { el.hidden = true; el.dataset.more = '1'; } else delete el.dataset.more; }
+    const left = shown - Math.min(shown, limit);
+    moreBtn.hidden = left <= 0;
+    moreBtn.textContent = `عرض المزيد · باقي ${left} جهة`;
+    document.getElementById('resCount')!.textContent = `${shown} من ${cards.length} جهة` + (left > 0 ? ` · يُعرض ${limit}` : '');
     document.getElementById('noRes')!.hidden = shown > 0;
     bars.forEach((b) => { const on = b.dataset.field === f.field; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     const chips: [string, string][] = [];
@@ -134,6 +145,11 @@ const stats: [string | number, string, string?][] = [
     (Object.keys(f) as (keyof F)[]).forEach((k) => { if (f[k] && !(k === 'sort' && f[k] === 'code')) p.set(k, f[k]); });
     history.replaceState(null, '', location.pathname + (p.toString() ? '?' + p : ''));
   }
+  moreBtn.addEventListener('click', () => {
+    const first = grid.querySelector<HTMLElement>('[data-card][data-more]');
+    limit += PAGE; apply(true);
+    first?.querySelector<HTMLElement>('a')?.focus({ preventScroll: true });
+  });
   let t: number | undefined;
   q.addEventListener('input', () => { clearTimeout(t); t = window.setTimeout(() => { f.q = q.value; apply(); }, 120); });
   q.addEventListener('focus', () => loadIndex(), { once: true });
