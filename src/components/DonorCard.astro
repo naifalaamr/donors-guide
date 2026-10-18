@@ -1,0 +1,30 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Tile from './Tile.astro';
+import TypeChip from './TypeChip.astro';
+import { ACC, TYPE, codeOf, grantRange, withBase } from '../lib/donors';
+import { normalizeAr } from '../lib/arabic';
+interface Props { entry: CollectionEntry<'donors'> }
+const { entry } = Astro.props;
+const d = entry.data;
+const quick = normalizeAr([d.name, d.hq, d.scope, d.legalForm, TYPE[d.type]?.label, ...d.fields, ...d.regions, ...d.grantTypes].join(' '));
+---
+<article class="card" data-card
+   data-id={entry.id} data-code={d.code} data-name={d.name} data-type={d.type} data-access={d.access}
+   data-max={d.maxGrant ?? 0} data-fields={d.fields.join('|')} data-regions={d.regions.join('|')}
+   data-gtypes={d.grantTypes.join('|')} data-quick={quick}>
+  <div class="row1"><span class="code mono">{codeOf(d.code)}</span><TypeChip type={d.type} /></div>
+  <div class="card-head">
+    <Tile name={d.name} type={d.type} logo={d.logo} />
+    <div class="t"><h3><a class="stretch" href={withBase(`donors/${entry.id}/`)}>{d.name}</a></h3><div class="where">{[d.hq, d.scope].filter(Boolean).join(' · ') || '—'}</div></div>
+  </div>
+  <div class="sum">{d.summary || d.mission}</div>
+  <div class="chips">
+    {d.fields.slice(0, 4).map((x) => <span class="chip">{x}</span>)}
+    {d.fields.length > 4 && <span class="chip">+{d.fields.length - 4}</span>}
+  </div>
+  <div class="foot"><span class:list={['access', d.access]}>{ACC[d.access]}</span><span class="num">{grantRange(d)}</span></div>
+  <div class="foot" style="border:0;padding:0;margin:0"><span></span>
+    <label class="cmpbox"><input type="checkbox" data-cmp={entry.id} /> قارن</label>
+  </div>
+</article>

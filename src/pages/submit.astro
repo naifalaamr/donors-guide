@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import { AXES, AR } from '../lib/donors';
+import { SUBMIT_FORM_URL } from '../lib/site';
+---
+<Base title="أضف جهة" nav="submit">
+  <div style="padding-block:24px 56px;max-width:900px">
+    <p class="lead">يدرس كل طالب جهتين مانحتين، ويرفع تقريره (PDF) عبر نموذج المقرر. يحوّل فريق المشروع كل تقرير إلى بطاقة على المحاور التسعة والخلاصة، ويراجعها قبل نشرها هنا برقم مثل <span class="mono">د47-027</span>.</p>
+    {SUBMIT_FORM_URL
+      ? <p><a class="btn primary" href={SUBMIT_FORM_URL} target="_blank" rel="noopener">ارفع تقريرك عبر نموذج المقرر</a></p>
+      : <div class="msg info" style="margin-block:12px">ارفع تقريرك عبر نموذج المقرر الذي أرسله فريق المشروع.</div>}
+    <h3 style="font-size:19px;margin:22px 0 4px">ما يجب أن يغطيه التقرير لكل جهة</h3>
+    <ol class="axes-list">
+      {AXES.map(([, t, q], i) => <li><span class="n">{AR[i]}</span><div><b>{t}</b><p>{q}</p></div></li>)}
+      <li><span class="n">✦</span><div><b>الخلاصة والمصادر</b><p>أسلوب المنح في جملتين، مع توثيق المصادر والمقابلات (الاسم/الصفة/التاريخ).</p></div></li>
+    </ol>
+  </div>
+</Base>

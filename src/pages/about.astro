@@ -1,0 +1,29 @@
+---
+import Base from '../layouts/Base.astro';
+import { AXES, AR } from '../lib/donors';
+---
+<Base title="عن المشروع" nav="about">
+  <div class="about" style="padding-block:24px 56px">
+    <div>
+      <h2 style="font-size:26px;margin-bottom:6px">عن الدليل</h2>
+      <p class="lead">كلّف د. عبدالكريم الصالح طلاب مقرر إدارة المنح بدراسة جهتين مانحتين لكل طالب، كلٌّ منهما بصورة مستقلة، لفهم أسلوب المنح لدى الجهة وفرص استفادة الجهات الخيرية منها. يجمع هذا الدليل بطاقات الدفعة كلها في مكان واحد: أوقاف ومؤسسات مانحة وجهات حكومية وبرامج مسؤولية اجتماعية، تُستعرض وتُقارن وتُصفّى حسب المجال والمنطقة وطريقة التقديم.</p>
+      <p class="lead">تُجمع المعلومات من مصادر موثوقة لكل جهة (الموقع الرسمي، السياسات، التقارير، إعلان المنحة) مع مقابلة حضورية أو عن بعد أو اتصال، ويُوثّق المصدر في كل بطاقة.</p>
+      <h3 style="font-size:19px;margin:22px 0 4px">محاور بطاقة الدراسة</h3>
+      <ol class="axes-list">
+        {AXES.map(([, t, q], i) => <li><span class="n">{AR[i]}</span><div><b>{t}</b><p>{q}</p></div></li>)}
+        <li><span class="n">✦</span><div><b>الخلاصة</b><p>أسلوب المنح لدى الجهة في جملتين: لمن تمنح، ماذا تمنح، كيف تختار، ومتى وكيف يمكن الوصول إليها.</p></div></li>
+      </ol>
+    </div>
+    <div>
+      <div class="panel">
+        <h3 style="font-size:18px">فريق المشروع</h3>
+        <div class="team">
+          <div class="person"><div class="av">ن</div><div><b>نايف سعيد الزهراني</b></div></div>
+          <div class="person"><div class="av">ع</div><div><b>عمر سالم العتيبي</b></div></div>
+          <div class="person"><div class="av">ع</div><div><b>عثمان محمد الشهري</b></div></div>
+        </div>
+        <p class="credits" style="margin-top:14px">بإشراف د. عبدالكريم الصالح<br />مقرر إدارة المنح · ماجستير إدارة الأوقاف والمنظمات غير الربحية<br />الدفعة 47 · 1448هـ / 2026م</p>
+      </div>
+    </div>
+  </div>
+</Base>

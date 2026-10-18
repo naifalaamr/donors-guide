@@ -1,0 +1,11 @@
+---
+import { TYPE, letterOf, withBase } from '../lib/donors';
+interface Props { name: string; type: string; logo?: string | null; size?: 'lg' }
+const { name, type, logo, size } = Astro.props;
+const t = TYPE[type] ?? TYPE.other;
+const src = logo ? (/^https?:/i.test(logo) ? logo : withBase('logos/' + logo.replace(/^.*\//, ''))) : null;
+const letter = letterOf(name);
+---
+{src
+  ? <span class:list={['tile', 'img', size]} style={`--tc:var(${t.color})`} data-letter={letter}><img src={src} alt={`شعار ${name}`} loading="lazy" referrerpolicy="no-referrer" onerror="var s=this.parentNode;s.className=s.className.replace(' img',' mono');s.textContent=s.dataset.letter" /></span>
+  : <span class:list={['tile', 'mono', size]} style={`--tc:var(${t.color})`} aria-hidden="true">{letter}</span>}

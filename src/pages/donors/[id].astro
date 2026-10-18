@@ -1,0 +1,92 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Tile from '../../components/Tile.astro';
+import TypeChip from '../../components/TypeChip.astro';
+import { ACC, AXES, AR, codeOf, grantRange, withBase } from '../../lib/donors';
+
+export async function getStaticPaths() {
+  const all = (await getCollection('donors')).sort((a, b) => a.data.code - b.data.code);
+  return all.map((entry, i) => ({ params: { id: entry.id }, props: { entry, prev: all[i - 1] ?? null, next: all[i + 1] ?? null } }));
+}
+interface Props { entry: CollectionEntry<'donors'>; prev: CollectionEntry<'donors'> | null; next: CollectionEntry<'donors'> | null }
+const { entry, prev, next } = Astro.props;
+const d = entry.data;
+const facts = [
+  ['تاريخ التأسيس', d.founded], ['الشكل القانوني', d.legalForm], ['المقر', d.hq], ['النطاق الجغرافي', d.scope],
+  ['طريقة الإتاحة', ACC[d.access]], ['طبيعة الدعم', d.supportForm], ['مدة الدعم', d.duration],
+  ['نمط التقديم', d.cycle], ['منصة التقديم', d.platform], ['حجم المنحة', grantRange(d)],
+].filter((x) => x[1]);
+const web = /^https?:\/\//i.test(d.website) ? d.website : '';
+const linkify = (s: string) => s; // text is rendered as plain text (escaped by Astro)
+---
+<Base title={d.name} description={d.summary || d.mission} nav="directory">
+  <div class="brand" slot="hero"><p style="margin:0;font-size:14px">بطاقة دراسة جهة مانحة · {d.fields.slice(0, 3).join('، ')}</p></div>
+
+  <nav class="crumbs" aria-label="مسار التصفح"><a href={withBase('')}>الدليل</a><span aria-hidden="true">‹</span><span>{d.name}</span></nav>
+
+  <div class="page-head">
+    <div class="row1"><span class="code mono">{codeOf(d.code)}</span><TypeChip type={d.type} /></div>
+    <div class="card-head"><Tile name={d.name} type={d.type} logo={d.logo} size="lg" /><div><h1>{d.name}</h1>
+      {web && <a href={web} target="_blank" rel="noopener" dir="ltr">{web.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a>}</div></div>
+    {d.summary && <p style="margin:0;max-width:80ch">{d.summary}</p>}
+    <div class="actions">
+      <button class="btn cmpbtn" type="button" data-cmp-toggle={entry.id} aria-pressed="false">أضف إلى المقارنة</button>
+      <button class="btn ghost" type="button" onclick="window.print()">طباعة البطاقة</button>
+    </div>
+  </div>
+
+  <div class="detail">
+    <div class="axes">
+      {AXES.map(([key, title, q], i) => {
+        const v = key === 'identity' ? (d.mission ? 'الرسالة: ' + d.mission : '') : (d as any)[key] as string;
+        return (
+          <section class="axis" id={key} aria-labelledby={`h-${key}`}>
+            <div class="n" aria-hidden="true">{AR[i]}</div>
+            <div>
+              <h4 id={`h-${key}`}>{title}</h4>
+              <div class="q">{q}</div>
+              {key === 'orientation' && (d.fields.length + d.regions.length > 0) && (
+                <div class="chips" style="margin-bottom:8px">
+                  {d.fields.map((x) => <a class="chip" href={withBase(`?field=${encodeURIComponent(x)}`)} style="text-decoration:none">{x}</a>)}
+                  {d.regions.map((x) => <span class="chip" style="background:var(--accent-soft)">{x}</span>)}
+                </div>
+              )}
+              {key === 'types' && d.grantTypes.length > 0 && (
+                <div class="chips" style="margin-bottom:8px">{d.grantTypes.map((x) => <span class="chip">{x}</span>)}</div>
+              )}
+              <div class:list={['a', { none: !v }]}>{v || 'لم تُستوفَ الإجابة في البطاقة.'}</div>
+            </div>
+          </section>
+        );
+      })}
+      <div class="summary-box"><h4>الخلاصة: أسلوب المنح</h4><div style="white-space:pre-wrap">{d.summary || '—'}</div></div>
+      {d.sources && <div class="sources"><b>المصادر والمقابلات</b>{'\n'}{linkify(d.sources)}</div>}
+    </div>
+    <aside class="side">
+      <dl class="facts">{facts.map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}
+        {d.phone && <div><dt>الهاتف</dt><dd><a href={`tel:${d.phone.replace(/[^\d+]/g, '')}`} dir="ltr">{d.phone}</a></dd></div>}
+        {d.email && <div><dt>البريد الإلكتروني</dt><dd><a href={`mailto:${d.email}`} dir="ltr">{d.email}</a></dd></div>}
+        {web && <div><dt>الموقع الرسمي</dt><dd><a href={web} target="_blank" rel="noopener" dir="ltr">{web.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a></dd></div>}
+      </dl>
+      <div class="panel" style="padding:12px 10px">
+        <b style="font-size:13px;color:var(--muted);padding-inline:8px">محاور البطاقة</b>
+        <ol class="toc">{AXES.map(([key, title], i) => <li><a href={`#${key}`}>{AR[i]}. {title}</a></li>)}</ol>
+      </div>
+    </aside>
+  </div>
+
+  <nav class="pager" aria-label="البطاقات المجاورة" style="padding-bottom:40px">
+    {prev ? <a class="btn" href={withBase(`donors/${prev.id}/`)}>→ {prev.data.name}</a> : <span />}
+    {next ? <a class="btn" href={withBase(`donors/${next.id}/`)}>{next.data.name} ←</a> : <span />}
+  </nav>
+</Base>
+
+<script>
+  import { readCmp, toggleCmp, onCmpChange, MAX_CMP } from '../../lib/compare-store';
+  const b = document.querySelector<HTMLButtonElement>('[data-cmp-toggle]')!;
+  const id = b.dataset.cmpToggle!;
+  const paint = () => { const ids = readCmp(); const on = ids.includes(id); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'في المقارنة ✓' : ids.length >= MAX_CMP ? 'المقارنة ممتلئة (٤)' : 'أضف إلى المقارنة'; b.disabled = !on && ids.length >= MAX_CMP; };
+  b.addEventListener('click', () => toggleCmp(id));
+  onCmpChange(paint); paint();
+</script>

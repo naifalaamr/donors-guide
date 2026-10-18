@@ -1,0 +1,97 @@
+---
+import '../styles/global.css';
+import { withBase } from '../lib/donors';
+interface Props { title?: string; description?: string; nav?: 'directory' | 'compare' | 'submit' | 'about' | null; }
+const { title, description = 'دليل تفاعلي لجهات المنح السعودية: أوقاف ومؤسسات مانحة وجهات حكومية وبرامج مسؤولية اجتماعية، مدروسة على تسعة محاور.', nav = null } = Astro.props;
+const full = title ? `${title} · دليل الجهات المانحة` : 'دليل الجهات المانحة · الدفعة ٤٧';
+const links = [
+  ['directory', '', 'الدليل'],
+  ['compare', 'compare/', 'المقارنة'],
+  ['submit', 'submit/', 'أضف جهة'],
+  ['about', 'about/', 'عن المشروع'],
+] as const;
+---
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{full}</title>
+  <meta name="description" content={description} />
+  <link rel="icon" href={withBase('favicon.svg')} type="image/svg+xml" />
+  <meta property="og:title" content={full} />
+  <meta property="og:description" content={description} />
+  <meta property="og:locale" content="ar_SA" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" />
+  <script is:inline>try{var t=localStorage.getItem('dg_theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+  <a class="skip" href="#main">تخطَّ إلى المحتوى</a>
+  <div class="idbar">
+    <div class="wrap">
+      <a href={withBase('')} aria-label="دليل الجهات المانحة · الدفعة ٤٧ — الرئيسية">
+        <img class="logo light" src={withBase('logo.svg')} alt="دليل الجهات المانحة · الدفعة ٤٧" width="300" height="72" />
+        <img class="logo dark" src={withBase('logo-dark.svg')} alt="" width="300" height="72" />
+      </a>
+      <div class="end">
+        <span class="meta">مقرر إدارة المنح · بإشراف د. عبدالكريم الصالح</span>
+        <button class="theme-btn" type="button" id="themeBtn" aria-label="تبديل المظهر">المظهر: تلقائي</button>
+      </div>
+    </div>
+    <div class="stripe" aria-hidden="true"><span></span><span></span><span></span></div>
+  </div>
+  <header class="top">
+    <div class="wrap">
+      <slot name="hero">
+        <div class="brand">
+          <p style="margin:0 0 2px;font-size:13px">دليل الجهات المانحة</p>
+          <h1>{title ?? 'استكشف الجهات المانحة'}</h1>
+        </div>
+      </slot>
+      <nav class="nav" aria-label="أقسام الدليل">
+        {links.map(([k, href, label]) => (
+          <a href={withBase(href)} aria-current={nav === k ? 'page' : undefined}>
+            {label}{k === 'compare' && <span class="count" data-cmp-count hidden>0</span>}
+          </a>
+        ))}
+      </nav>
+    </div>
+  </header>
+  <main id="main" class="wrap">
+    <slot />
+  </main>
+  <footer><div class="wrap">دليل الجهات المانحة · الدفعة 47 · ماجستير إدارة الأوقاف والمنظمات غير الربحية · إعداد: نايف سعيد الزهراني، عمر سالم العتيبي، عثمان محمد الشهري</div></footer>
+  <div class="cmpbar" id="cmpBar" hidden></div>
+  <script>
+    import { readCmp, onCmpChange } from '../lib/compare-store';
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+    // theme
+    const btn = document.getElementById('themeBtn')!;
+    const label = { auto: 'تلقائي', light: 'فاتح', dark: 'داكن' } as const;
+    let mode = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) ?? 'auto';
+    const paint = () => (btn.textContent = 'المظهر: ' + label[mode]);
+    paint();
+    btn.addEventListener('click', () => {
+      mode = mode === 'auto' ? 'light' : mode === 'light' ? 'dark' : 'auto';
+      if (mode === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = mode;
+      try { mode === 'auto' ? localStorage.removeItem('dg_theme') : localStorage.setItem('dg_theme', mode); } catch {}
+      paint();
+    });
+    // compare bar + nav count
+    const bar = document.getElementById('cmpBar')!;
+    const onComparePage = location.pathname.replace(/\/$/, '').endsWith('/compare');
+    function render() {
+      const ids = readCmp();
+      document.querySelectorAll<HTMLElement>('[data-cmp-count]').forEach((el) => { el.hidden = !ids.length; el.textContent = String(ids.length); });
+      if (!ids.length || onComparePage) { bar.hidden = true; return; }
+      bar.hidden = false;
+      bar.innerHTML = `<span>اخترت <b class="num">${ids.length}</b> للمقارنة${ids.length >= 4 ? ' (الحد الأقصى)' : ''}</span><a class="btn gold" href="${base}/compare/">قارن الآن</a><button class="btn ghost" style="color:var(--on-deep);border-color:transparent" type="button" data-cmp-clear>إلغاء</button>`;
+    }
+    bar.addEventListener('click', (e) => { if ((e.target as HTMLElement).closest('[data-cmp-clear]')) { import('../lib/compare-store').then((m) => m.writeCmp([])); } });
+    onCmpChange(render);
+    render();
+  </script>
+</body>
+</html>

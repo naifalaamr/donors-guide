@@ -1,0 +1,5 @@
+---
+import { TYPE } from '../lib/donors';
+const t = TYPE[Astro.props.type] ?? TYPE.other;
+---
+<span class="type" style={`--tc:var(${t.color})`}>{t.label}</span>

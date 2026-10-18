@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+.DS_Store
+# raw student reports and working copies never go in the repo
+reports/
+*.pdf
+*.docx
+private/

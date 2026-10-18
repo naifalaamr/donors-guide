@@ -1,0 +1,158 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import DonorCard from '../components/DonorCard.astro';
+import { TYPES, ACCESS, GTYPES, REGIONS, withBase } from '../lib/donors';
+const entries = (await getCollection('donors')).sort((a, b) => a.data.code - b.data.code);
+const L = entries.map((e) => e.data);
+const n = L.length;
+const c = (t: string) => L.filter((d) => d.type === t).length;
+const open = L.filter((d) => d.access === 'open' || d.access === 'mixed').length;
+const fieldCount: Record<string, number> = {};
+L.forEach((d) => d.fields.forEach((f) => (fieldCount[f] = (fieldCount[f] || 0) + 1)));
+const topFields = Object.entries(fieldCount).sort((a, b) => b[1] - a[1]).slice(0, 9);
+const maxF = topFields[0]?.[1] || 1;
+const stats: [string | number, string, string?][] = [
+  [n, 'جهة مانحة في الدليل'],
+  [c('waqf'), 'وقف', '--t-waqf'],
+  [c('found'), 'مؤسسة مانحة', '--t-found'],
+  [c('gov'), 'جهة حكومية', '--t-gov'],
+  [c('csr') + c('fund') + c('other'), 'شركات وصناديق وغيرها', '--t-csr'],
+  [n ? Math.round((open / n) * 100) + '%' : '—', 'تتيح التقديم المفتوح'],
+  [Object.keys(fieldCount).length, 'مجالاً مغطى'],
+];
+---
+<Base nav="directory">
+  <div class="brand" slot="hero">
+    <h1>استكشف الجهات المانحة</h1>
+    <p>أوقاف ومؤسسات مانحة وجهات حكومية وبرامج مسؤولية اجتماعية، درسها طلاب الدفعة على محاور بطاقة الدراسة.</p>
+  </div>
+
+  <div class="stats">
+    {stats.map(([v, l, col]) => (
+      <div class="stat"><div class="v">{v}</div><div class="l">{col && <span class="dot" style={`background:var(${col})`} />}{l}</div></div>
+    ))}
+  </div>
+
+  <div class="dir" style="padding-bottom:64px">
+    <aside class="rail" id="rail">
+      <div>
+        <label for="q">بحث</label>
+        <input class="field search" id="q" type="search" placeholder="اسم الجهة، مدينة، مجال، شرط…" autocomplete="off" />
+      </div>
+      <button class="btn filters-mobile" id="toggleFilters" type="button" aria-expanded="false" aria-controls="rail">التصفية</button>
+      <div class="grp"><label for="fType">نوع الجهة</label>
+        <select class="field" id="fType" data-f="type"><option value="">كل الأنواع</option>{TYPES.map((t) => <option value={t[0]}>{t[1]}</option>)}</select></div>
+      <div class="grp"><label for="fAccess">طريقة التقديم</label>
+        <select class="field" id="fAccess" data-f="access"><option value="">الكل</option>{ACCESS.map((t) => <option value={t[0]}>{t[1]}</option>)}</select></div>
+      <div class="grp"><label for="fGtype">نوع المنحة</label>
+        <select class="field" id="fGtype" data-f="gtype"><option value="">الكل</option>{GTYPES.map((t) => <option value={t}>{t}</option>)}</select></div>
+      <div class="grp"><label for="fRegion">المنطقة المستهدفة</label>
+        <select class="field" id="fRegion" data-f="region"><option value="">كل المناطق</option>{REGIONS.map((t) => <option value={t}>{t}</option>)}</select></div>
+      <div class="grp"><label id="barsLbl">المجالات الأكثر حضوراً</label>
+        <div class="bars" role="group" aria-labelledby="barsLbl">
+          {topFields.map(([k, v]) => (
+            <button type="button" class="bar" data-field={k} aria-pressed="false">
+              <span class="track"><span class="fill" style={`width:${Math.max(8, (v / maxF) * 100)}%`} /><span class="name">{k}</span></span><span class="n">{v}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </aside>
+    <div style="min-width:0">
+      <div class="toolbar">
+        <div class="res" id="resCount" aria-live="polite">{n} من {n} جهة</div>
+        <div class="chips" id="activeChips"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select class="field" id="sort" style="width:auto" aria-label="الترتيب">
+            <option value="code">ترتيب: رقم البطاقة</option>
+            <option value="name">ترتيب: الاسم</option>
+            <option value="max">ترتيب: أعلى سقف منحة</option>
+          </select>
+          <a class="btn" href={withBase('data/donors.csv')} download="دليل-الجهات-المانحة.csv">تنزيل CSV</a>
+        </div>
+      </div>
+      <div class="grid" id="grid">{entries.map((e) => <DonorCard entry={e} />)}</div>
+      <div class="msg info" id="noRes" hidden>لا توجد جهات تطابق هذه التصفية. جرّب إزالة أحد المرشحات.</div>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { tokens } from '../lib/arabic';
+  import { readCmp, toggleCmp, onCmpChange, MAX_CMP } from '../lib/compare-store';
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  type F = { q: string; type: string; access: string; gtype: string; region: string; field: string; sort: string };
+  const grid = document.getElementById('grid')!;
+  const cards = [...grid.querySelectorAll<HTMLElement>('[data-card]')];
+  const q = document.getElementById('q') as HTMLInputElement;
+  const sortSel = document.getElementById('sort') as HTMLSelectElement;
+  const selects = [...document.querySelectorAll<HTMLSelectElement>('select[data-f]')];
+  const bars = [...document.querySelectorAll<HTMLButtonElement>('.bar')];
+  const LABEL: Record<string, string> = {};
+  selects.forEach((s) => [...s.options].forEach((o) => (LABEL[s.dataset.f + ':' + o.value] = o.text)));
+
+  // full-text index (normalised) loaded on first search
+  let full: Record<string, string> | null = null;
+  let loading: Promise<void> | null = null;
+  const loadIndex = () => (loading ??= fetch(base + '/data/search-index.json').then((r) => r.json()).then((j) => { full = j; }).catch(() => {}));
+
+  const params = new URLSearchParams(location.search);
+  const f: F = { q: params.get('q') || '', type: params.get('type') || '', access: params.get('access') || '', gtype: params.get('gtype') || '', region: params.get('region') || '', field: params.get('field') || '', sort: params.get('sort') || 'code' };
+  q.value = f.q; sortSel.value = f.sort;
+  selects.forEach((s) => (s.value = (f as any)[s.dataset.f!] || ''));
+
+  const has = (el: HTMLElement, key: string, v: string) => (el.dataset[key] || '').split('|').includes(v);
+  function apply() {
+    const toks = tokens(f.q);
+    if (toks.length) loadIndex();
+    let shown = 0;
+    for (const el of cards) {
+      const hay = (full?.[el.dataset.id!] ?? '') + ' ' + el.dataset.quick;
+      const ok = (!f.type || el.dataset.type === f.type) && (!f.access || el.dataset.access === f.access)
+        && (!f.gtype || has(el, 'gtypes', f.gtype))
+        && (!f.region || has(el, 'regions', f.region) || has(el, 'regions', 'جميع المناطق'))
+        && (!f.field || has(el, 'fields', f.field))
+        && toks.every((t) => hay.includes(t));
+      el.hidden = !ok; if (ok) shown++;
+    }
+    const by: Record<string, (a: HTMLElement, b: HTMLElement) => number> = {
+      code: (a, b) => +a.dataset.code! - +b.dataset.code!,
+      name: (a, b) => a.dataset.name!.localeCompare(b.dataset.name!, 'ar'),
+      max: (a, b) => +b.dataset.max! - +a.dataset.max! || +a.dataset.code! - +b.dataset.code!,
+    };
+    [...cards].sort(by[f.sort] || by.code).forEach((el) => grid.appendChild(el));
+    document.getElementById('resCount')!.textContent = `${shown} من ${cards.length} جهة`;
+    document.getElementById('noRes')!.hidden = shown > 0;
+    bars.forEach((b) => { const on = b.dataset.field === f.field; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    const chips: [string, string][] = [];
+    (['type', 'access', 'gtype', 'region'] as const).forEach((k) => { if (f[k]) chips.push([k, LABEL[k + ':' + f[k]] || f[k]]); });
+    if (f.field) chips.push(['field', f.field]);
+    const box = document.getElementById('activeChips')!;
+    box.replaceChildren(...chips.map(([k, v]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip x'; b.dataset.clear = k; b.textContent = v; b.setAttribute('aria-label', 'إزالة مرشح ' + v); return b; }));
+    const p = new URLSearchParams();
+    (Object.keys(f) as (keyof F)[]).forEach((k) => { if (f[k] && !(k === 'sort' && f[k] === 'code')) p.set(k, f[k]); });
+    history.replaceState(null, '', location.pathname + (p.toString() ? '?' + p : ''));
+  }
+  let t: number | undefined;
+  q.addEventListener('input', () => { clearTimeout(t); t = window.setTimeout(() => { f.q = q.value; apply(); }, 120); });
+  q.addEventListener('focus', () => loadIndex(), { once: true });
+  selects.forEach((s) => s.addEventListener('change', () => { (f as any)[s.dataset.f!] = s.value; apply(); }));
+  sortSel.addEventListener('change', () => { f.sort = sortSel.value; apply(); });
+  bars.forEach((b) => b.addEventListener('click', () => { f.field = f.field === b.dataset.field ? '' : b.dataset.field!; apply(); }));
+  document.getElementById('activeChips')!.addEventListener('click', (e) => {
+    const k = (e.target as HTMLElement).closest<HTMLElement>('[data-clear]')?.dataset.clear; if (!k) return;
+    (f as any)[k] = ''; const s = selects.find((x) => x.dataset.f === k); if (s) s.value = ''; apply();
+  });
+  const rail = document.getElementById('rail')!, tf = document.getElementById('toggleFilters')!;
+  tf.addEventListener('click', () => { const o = rail.classList.toggle('open'); tf.setAttribute('aria-expanded', String(o)); });
+
+  // compare checkboxes
+  const boxes = [...document.querySelectorAll<HTMLInputElement>('input[data-cmp]')];
+  const syncBoxes = () => { const ids = readCmp(); boxes.forEach((b) => { b.checked = ids.includes(b.dataset.cmp!); b.disabled = !b.checked && ids.length >= MAX_CMP; }); };
+  boxes.forEach((b) => b.addEventListener('change', () => { if (!toggleCmp(b.dataset.cmp!)) b.checked = false; }));
+  onCmpChange(syncBoxes); syncBoxes();
+
+  if (f.q) loadIndex().then(apply);
+  apply();
+</script>
