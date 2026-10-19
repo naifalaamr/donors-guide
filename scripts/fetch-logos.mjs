@@ -3,7 +3,9 @@
 // Where a card's logo comes from (the first source that yields a usable image wins):
 //   1. a file dropped in public/logos/ named after the card id: d47-012.png / .svg / .webp / .jpg
 //   2. src/data/logo-overrides.json: { "d47-012": "https://…/logo.png" } forces a URL,
-//      { "d47-012": false } keeps the letter tile (e.g. when discovery picked the wrong image)
+//      { "d47-012": false } keeps the letter tile (e.g. when discovery picked the wrong image),
+//      { "d47-012": { "plate": "dark" } } keeps the found logo but forces its plate (light | dark | mid),
+//      { "d47-012": { "src": "https://…/logo.png", "plate": "light" } } does both
 //   3. the card's own "logo" field in donors.json (a URL, or a file name in public/logos/)
 //   4. discovery from the card's website, built on metascraper (github.com/microlinkhq/metascraper, MIT):
 //      structured logo (og:logo, schema.org) → the site's header <img> logo → apple-touch-icon / largest favicon
@@ -43,13 +45,17 @@ export const lum = (r, g, b) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin
 export const contrast = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 export const PLATES = { light: [0xff, 0xff, 0xff], dark: [0x1b, 0x25, 0x50], mid: [0x6b, 0x74, 0x8a] };
 const PLATE_L = Object.fromEntries(Object.entries(PLATES).map(([k, [r, g, b]]) => [k, lum(r, g, b)]));
-const LEGIBLE = 2.5;
+const LEGIBLE = 2.5, VISIBLE = 1.75;
 
-// Decide the plate from raw RGBA pixels. Only logos with real transparency can change plate:
-// an opaque logo carries its own background, so it stays on white. `transparentSource` must be measured on
-// the image BEFORE trimming: a tight logo has few transparent pixels left once its margins are cut.
+// Decide the plate from raw RGBA pixels. Logos are drawn for a white page, so white is the default: coloured,
+// gold and two-tone logos stay on white even when parts of them are soft (a dark plate would swallow their dark
+// text). A logo moves to a darker plate only when it is mostly white or near-white and would vanish on white:
+// under 25% of it legible on white (contrast >= 2.5) and under 60% even visible there (contrast >= 1.75).
+// Only logos with real transparency can change plate: an opaque logo carries its own background.
+// `transparentSource` must be measured on the image BEFORE trimming: a tight logo has few transparent pixels
+// left once its margins are cut. Exceptions go in src/data/logo-overrides.json ({"plate": "dark"}).
 export function choosePlate(data, N, transparentSource) {
-  let transp = 0, wsum = 0, ink = 0;
+  let transp = 0, wsum = 0, ink = 0, seen = 0;
   const ok = { light: 0, dark: 0, mid: 0 };
   for (let i = 0; i < N; i++) {
     const a = data[i * 4 + 3];
@@ -57,16 +63,15 @@ export function choosePlate(data, N, transparentSource) {
     const w = a / 255, l = lum(data[i * 4], data[i * 4 + 1], data[i * 4 + 2]);
     wsum += w;
     if (l < 0.85) ink++;
+    if (contrast(l, PLATE_L.light) >= VISIBLE) seen += w;
     for (const p in ok) if (contrast(l, PLATE_L[p]) >= LEGIBLE) ok[p] += w;
   }
   const share = Object.fromEntries(Object.entries(ok).map(([p, v]) => [p, wsum ? v / wsum : 1]));
   const hasAlpha = transparentSource ?? transp / N > 0.05;
+  const onWhite = wsum ? seen / wsum : 1;
   let plate = 'light';
-  if (hasAlpha && share.light < 0.85) {
-    const best = share.dark >= share.mid - 0.05 ? 'dark' : 'mid';
-    if (share[best] > share.light + 0.1) plate = best;
-  }
-  return { plate, hasAlpha, visible: N - transp, ink, share };
+  if (hasAlpha && share.light < 0.25 && onWhite < 0.6) plate = share.dark >= share.mid - 0.05 ? 'dark' : 'mid';
+  return { plate, hasAlpha, visible: N - transp, ink, share, onWhite };
 }
 
 // ---------- fetching ----------
@@ -147,7 +152,7 @@ async function discover(website) {
 }
 
 // ---------- processing ----------
-async function processImage(sharp, buf, id, kind) {
+async function processImage(sharp, buf, id, kind, forcePlate) {
   let img = sharp(buf, { density: 300, animated: false }).ensureAlpha();
   const meta0 = await img.metadata();
   if (!meta0.width || !meta0.height) throw new Error('not an image');
@@ -161,7 +166,9 @@ async function processImage(sharp, buf, id, kind) {
   const trimmed = await sharp(base).trim({ threshold: 10 }).png().toBuffer().catch(() => base);
   const { data, info } = await sharp(trimmed).raw().toBuffer({ resolveWithObject: true });
   const W = info.width, H = info.height, N = W * H;
-  const { plate, visible, ink, share } = choosePlate(data, N, transparentSource);
+  const auto = choosePlate(data, N, transparentSource);
+  const { visible, ink, share } = auto;
+  const plate = PLATES[forcePlate] ? forcePlate : auto.plate;
   // quality gate — stricter for images found by discovery, which nobody has looked at yet
   const minSide = kind === 'site' ? 48 : 16;
   if (Math.max(W, H) < minSide) throw new Error(`too small (${W}×${H})`);
@@ -181,7 +188,8 @@ function candidatesFor(d, dropped, overrides) {
   if (dropped[d.id]) c.push({ kind: 'file', ref: dropped[d.id] });
   const ov = overrides[d.id];
   if (ov === false) return c;
-  if (typeof ov === 'string' && ov) c.push({ kind: 'override', ref: ov });
+  const ovSrc = typeof ov === 'string' ? ov : ov && typeof ov === 'object' ? ov.src : null;
+  if (ovSrc) c.push({ kind: 'override', ref: ovSrc });
   if (d.logo) {
     if (/^https?:/i.test(d.logo)) c.push({ kind: 'data', ref: d.logo });
     else c.push({ kind: 'file', ref: d.logo.replace(/^.*\//, '') });
@@ -218,7 +226,8 @@ async function main() {
           if (Date.now() > deadline) break;
           try {
             const { buf, via } = await loadImage(t);
-            meta[d.id] = { ...(await processImage(sharp, buf, d.id, t.kind)), source: t.kind, via, src: t.kind === 'file' ? 'logos/' + t.ref : t.ref };
+            const forcePlate = overrides[d.id] && typeof overrides[d.id] === 'object' ? overrides[d.id].plate : undefined;
+            meta[d.id] = { ...(await processImage(sharp, buf, d.id, t.kind, forcePlate)), source: t.kind, via, src: t.kind === 'file' ? 'logos/' + t.ref : t.ref };
             break;
           } catch (e) { errs.push(`${t.kind}: ${e.name === 'AbortError' ? 'timeout' : e.message}`); }
         }
