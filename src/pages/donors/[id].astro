@@ -27,7 +27,7 @@ const linkify = (s: string) => s; // text is rendered as plain text (escaped by 
 
   <div class="page-head">
     <div class="row1"><span class="code mono">{codeOf(d.code)}</span><TypeChip type={d.type} /></div>
-    <div class="card-head"><Tile name={d.name} type={d.type} logo={d.logo} size="lg" /><div><h1>{d.name}</h1>
+    <div class="card-head"><Tile name={d.name} type={d.type} logo={d.logo} size="lg" id={entry.id} /><div><h1>{d.name}</h1>
       {web && <a href={web} target="_blank" rel="noopener" dir="ltr">{web.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a>}</div></div>
     {d.summary && <p style="margin:0;max-width:80ch">{d.summary}</p>}
     <div class="actions">

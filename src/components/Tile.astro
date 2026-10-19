@@ -1,11 +1,28 @@
 ---
 import { TYPE, letterOf, withBase } from '../lib/donors';
-interface Props { name: string; type: string; logo?: string | null; size?: 'lg' }
-const { name, type, logo, size } = Astro.props;
+interface Props { name: string; type: string; logo?: string | null; size?: 'lg'; id?: string }
+const { name, type, logo, size, id } = Astro.props;
 const t = TYPE[type] ?? TYPE.other;
-const src = logo ? (/^https?:/i.test(logo) ? logo : withBase('logos/' + logo.replace(/^.*\//, ''))) : null;
+// logo-meta.json is written by scripts/fetch-logos.mjs at build time (may be absent locally)
+const metaMod = Object.values(import.meta.glob('../data/logo-meta.json', { eager: true, import: 'default' }))[0] as Record<string, { file: string; ratio: number; density: number; dark: boolean }> | undefined;
+const m = id && logo ? metaMod?.[id] : undefined;
+const remote = logo ? (/^https?:/i.test(logo) ? logo : withBase('logos/' + logo.replace(/^.*\//, ''))) : null;
+const src = m ? withBase('logos/' + m.file) : remote;
 const letter = letterOf(name);
+
+// Logo Soup sizing (sanity-labs/react-logo-soup): width = base · ratio^k, with a mild density correction,
+// so wide wordmarks and square emblems carry the same visual weight. The plate grows sideways for wide logos.
+const S = size === 'lg' ? { base: 52, maxH: 54, maxW: 168, plate: 72, pad: 10 } : { base: 32, maxH: 34, maxW: 66, plate: 76, pad: 5 };
+let style = `--tc:var(${t.color})`;
+if (m) {
+  const f = Math.min(1.18, Math.max(0.85, (0.35 / Math.max(m.density, 0.05)) ** 0.3));
+  let w = S.base * m.ratio ** 0.55 * f, h = w / m.ratio;
+  const k = Math.min(1, S.maxH / h, S.maxW / w); w *= k; h *= k;
+  style += `;--lw:${w.toFixed(1)}px;--lh:${h.toFixed(1)}px;--pw:${Math.max(S.plate, w + 2 * S.pad).toFixed(1)}px`;
+}
+// Remote logo the build couldn't store: size by its aspect ratio once it loads (no density/contrast data).
+const fallbackFit = `var s=this.parentNode,r=this.naturalWidth/this.naturalHeight;if(!r)return;var B=${S.base},w=B*Math.pow(r,0.55),h=w/r,k=Math.min(1,${S.maxH}/h,${S.maxW}/w);w*=k;h*=k;s.style.setProperty('--lw',w+'px');s.style.setProperty('--lh',h+'px');s.style.setProperty('--pw',Math.max(${S.plate},w+${2 * S.pad})+'px');s.classList.add('fit')`;
 ---
 {src
-  ? <span class:list={['tile', 'img', size]} style={`--tc:var(${t.color})`} data-letter={letter}><img src={src} alt={`شعار ${name}`} loading="lazy" referrerpolicy="no-referrer" onerror="var s=this.parentNode;s.className=s.className.replace(' img',' mono');s.textContent=s.dataset.letter" /></span>
-  : <span class:list={['tile', 'mono', size]} style={`--tc:var(${t.color})`} aria-hidden="true">{letter}</span>}
+  ? <span class:list={['tile', 'img', size, m && 'fit', m?.dark && 'on-dark']} style={style} data-letter={letter}><img src={src} alt={`شعار ${name}`} loading="lazy" decoding="async" referrerpolicy="no-referrer" onload={m ? undefined : fallbackFit} onerror="var s=this.parentNode;s.className=s.className.replace(' img',' mono').replace(' fit','').replace(' on-dark','');s.textContent=s.dataset.letter" /></span>
+  : <span class:list={['tile', 'mono', size]} style={style} aria-hidden="true">{letter}</span>}

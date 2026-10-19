@@ -7,3 +7,6 @@ reports/
 *.pdf
 *.docx
 private/
+# generated at build time by scripts/fetch-logos.mjs
+public/logos/auto/
+src/data/logo-meta.json

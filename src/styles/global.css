@@ -285,3 +285,33 @@ a,button,input,select,label,.card{touch-action:manipulation}
 /* "Show more" under the results grid */
 .more-wrap{display:flex;justify-content:center;margin-top:20px}
 .more-wrap .btn{min-height:44px;padding-inline:24px}
+/* Logos: plates sized per logo (Logo Soup formula, see scripts/fetch-logos.mjs) */
+.tile.img.fit{width:var(--pw);border-radius:12px}
+.tile.img.fit.lg{border-radius:16px}
+.tile.img.fit img{width:var(--lw);height:var(--lh);max-width:none;max-height:none;object-fit:contain}
+.tile.img.on-dark{background:#1B2550;border-color:#1B2550}
+:root[data-theme="dark"] .tile.img:not(.on-dark){border-color:transparent}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tile.img:not(.on-dark){border-color:transparent}}
+.page-head .card-head{flex-wrap:wrap}
+.page-head .card-head>div{flex:1 1 220px;min-width:0}
+/* Uniform cards: every card has the same blocks at the same heights */
+.grid{grid-auto-rows:1fr}
+.card .card-head{min-height:72px;align-items:flex-start}
+.card .tile,.card .tile.img.fit{width:76px;height:48px}
+/* Long names: the full name sits in a 2-line window; on hover/focus it scrolls up to show the rest, and back on leave.
+   --shift / --dur are set per card by fitName() in index.astro. Touch screens keep the 2-line view (full name on the donor page). */
+.card h3{font-size:17px;line-height:1.35;height:2.7em;overflow:hidden;position:relative}
+.card h3 .stretch{display:block}
+.card h3 .nm{display:block;text-wrap:balance;transition:transform var(--dur,0s) ease-in-out .25s}
+.card h3.long{-webkit-mask-image:linear-gradient(#000 calc(100% - .55em),transparent);mask-image:linear-gradient(#000 calc(100% - .55em),transparent)}
+@media (hover:hover){
+  .card:hover h3.long .nm,.card:focus-within h3.long .nm{transform:translateY(calc(-1 * var(--shift,0px)))}
+  .card:hover h3.long,.card:focus-within h3.long{-webkit-mask-image:linear-gradient(transparent,#000 .55em);mask-image:linear-gradient(transparent,#000 .55em)}
+}
+.card:focus-within h3.long .nm{transform:translateY(calc(-1 * var(--shift,0px)))}
+@media (prefers-reduced-motion:reduce){.card h3 .nm{transition:none}}
+.card .where{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .sum{min-height:5.25em}
+.card .chips{flex-wrap:nowrap;overflow:hidden;min-height:22px}
+.card .chips .chip{flex:none}
+.card .chips .chip[hidden]{display:none}

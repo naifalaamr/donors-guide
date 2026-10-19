@@ -15,13 +15,13 @@ const quick = normalizeAr([d.name, d.hq, d.scope, d.legalForm, TYPE[d.type]?.lab
    data-gtypes={d.grantTypes.join('|')} data-quick={quick}>
   <div class="row1"><span class="code mono">{codeOf(d.code)}</span><TypeChip type={d.type} /></div>
   <div class="card-head">
-    <Tile name={d.name} type={d.type} logo={d.logo} />
-    <div class="t"><h3><a class="stretch" href={withBase(`donors/${entry.id}/`)}>{d.name}</a></h3><div class="where">{[d.hq, d.scope].filter(Boolean).join(' · ') || '—'}</div></div>
+    <Tile name={d.name} type={d.type} logo={d.logo} id={entry.id} />
+    <div class="t"><h3><a class="stretch" href={withBase(`donors/${entry.id}/`)} ><span class="nm">{d.name}</span></a></h3><div class="where">{[d.hq, d.scope].filter(Boolean).join(' · ') || '—'}</div></div>
   </div>
   <div class="sum">{d.summary || d.mission}</div>
   <div class="chips">
-    {d.fields.slice(0, 4).map((x) => <span class="chip">{x}</span>)}
-    {d.fields.length > 4 && <span class="chip">+{d.fields.length - 4}</span>}
+    {d.fields.map((x) => <span class="chip" title={x}>{x}</span>)}
+    <span class="chip more" hidden></span>
   </div>
   <div class="foot"><span class:list={['access', d.access]}>{ACC[d.access]}</span><span class="num">{grantRange(d)}</span></div>
   <div class="foot" style="border:0;padding:0;margin:0"><span></span>

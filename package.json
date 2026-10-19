@@ -7,8 +7,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "prebuild": "node scripts/check-data.mjs",
-    "check-data": "node scripts/check-data.mjs"
+    "prebuild": "node scripts/check-data.mjs && node scripts/fetch-logos.mjs",
+    "check-data": "node scripts/check-data.mjs",
+    "logos": "node scripts/fetch-logos.mjs"
   },
   "dependencies": {
     "astro": "7.3.8"

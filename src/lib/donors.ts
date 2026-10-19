@@ -42,7 +42,7 @@ export function grantRange(d: { minGrant: number | null; maxGrant: number | null
   if (a) return `من ${a} ر.س`;
   return 'الحجم غير معلن';
 }
-const GENERIC = ['وقف', 'أوقاف', 'مؤسسة', 'المؤسسة', 'صندوق', 'برنامج', 'جمعية', 'بنك', 'شركة', 'منصة', 'الخيرية', 'الأهلية', 'الشيخ', 'الأمير', 'الأميرة', 'والدة', 'لوالدة', 'ابن', 'بن'];
+const GENERIC = ['وقف', 'أوقاف', 'مؤسسة', 'المؤسسة', 'صندوق', 'برنامج', 'جمعية', 'بنك', 'شركة', 'منصة', 'الخيرية', 'الأهلية', 'الشيخ', 'الأمير', 'الأميرة', 'والدة', 'لوالدة', 'ابن', 'بن', 'صاحب', 'السمو', 'الملكي', 'سمو'];
 export function letterOf(name: string) {
   const w = String(name || '').replace(/\(.*?\)/g, ' ').split(/\s+/).filter(Boolean);
   let x = w.find((t) => !GENERIC.includes(t)) || w[0] || '؟';
