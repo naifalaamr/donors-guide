@@ -201,6 +201,16 @@ const stats: [string | number, string, string?][] = [
   const ro = new ResizeObserver((es) => es.forEach((e) => fitCard(e.target.closest('[data-card]') as HTMLElement)));
   cards.forEach((c) => { const b = c.querySelector('.chips'); if (b) ro.observe(b); });
   document.fonts?.ready.then(() => cards.forEach(fitCard));
+  // touch screens: show the rest of a long name once, when the card is well inside the viewport
+  if (matchMedia('(hover: none)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const io = new IntersectionObserver((es) => es.forEach((e) => {
+      const h = (e.target as HTMLElement).querySelector('h3');
+      if (!e.isIntersecting || !h?.classList.contains('long')) return;
+      h.classList.add('peek'); io.unobserve(e.target);
+      h.addEventListener('animationend', () => h.classList.remove('peek'), { once: true });
+    }), { threshold: 0.9 });
+    cards.forEach((c) => io.observe(c));
+  }
 
   if (f.q) loadIndex().then(apply);
   apply();
