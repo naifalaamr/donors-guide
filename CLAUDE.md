@@ -17,7 +17,14 @@ Grants Management course (ماجستير إدارة الأوقاف والمنظ�
   the 8 text axes (orientation, types, policies, criteria, size, apply, followup, opportunity), summary, sources.
 - type ∈ waqf | found | gov | csr | fund | other; access ∈ open | invite | mixed | unknown.
 - Use the controlled vocab in `src/lib/donors.ts` (GTYPES, REGIONS) and the field list for tags.
-- Logos: put files in `public/logos/` and set `"logo": "file.svg"`; null → letter tile in the type colour.
+- Logos (built by `scripts/fetch-logos.mjs` during `npm run build`; output is gitignored):
+  1. a file in `public/logos/` named after the card (`d47-012.png|svg|webp|jpg`) wins;
+  2. `src/data/logo-overrides.json`: `"d47-012": "https://…"` forces a URL, `"d47-012": false` keeps the letter tile;
+  3. the card's `logo` field (URL or file name in `public/logos/`);
+  4. otherwise the logo is discovered from the card's `website` with metascraper (og:logo / schema.org → header
+     `<img>` logo → apple-touch-icon/favicon). `LOGO_DISCOVER=0` skips discovery.
+  Images are stored as `public/logos/auto/<id>.webp`; the plate (white / ink / mid slate) is chosen by a per-pixel
+  legibility vote. Review every logo, its source and plate at `/logos/` (not in the menu) after each deploy.
 
 ## Hard rules
 - NO student names or any student data in `src/data/`, pages, or commits. Raw reports (PDF/DOCX) stay out of the repo (.gitignore).

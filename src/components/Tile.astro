@@ -3,9 +3,12 @@ import { TYPE, letterOf, withBase } from '../lib/donors';
 interface Props { name: string; type: string; logo?: string | null; size?: 'lg'; id?: string }
 const { name, type, logo, size, id } = Astro.props;
 const t = TYPE[type] ?? TYPE.other;
-// logo-meta.json is written by scripts/fetch-logos.mjs at build time (may be absent locally)
-const metaMod = Object.values(import.meta.glob('../data/logo-meta.json', { eager: true, import: 'default' }))[0] as Record<string, { file: string; ratio: number; density: number; dark: boolean }> | undefined;
-const m = id && logo ? metaMod?.[id] : undefined;
+// logo-meta.json is written by scripts/fetch-logos.mjs at build time (may be absent locally).
+// It also covers cards with no "logo" field whose logo was found on their website or dropped in public/logos/.
+type Meta = { file: string; ratio: number; density: number; plate?: 'light' | 'dark' | 'mid'; dark?: boolean };
+const metaMod = Object.values(import.meta.glob('../data/logo-meta.json', { eager: true, import: 'default' }))[0] as Record<string, Meta> | undefined;
+const m = id ? metaMod?.[id] : undefined;
+const plate = m ? (m.plate ?? (m.dark ? 'dark' : 'light')) : 'light';
 const remote = logo ? (/^https?:/i.test(logo) ? logo : withBase('logos/' + logo.replace(/^.*\//, ''))) : null;
 const src = m ? withBase('logos/' + m.file) : remote;
 const letter = letterOf(name);
@@ -24,5 +27,5 @@ if (m) {
 const fallbackFit = `var s=this.parentNode,r=this.naturalWidth/this.naturalHeight;if(!r)return;var B=${S.base},w=B*Math.pow(r,0.55),h=w/r,k=Math.min(1,${S.maxH}/h,${S.maxW}/w);w*=k;h*=k;s.style.setProperty('--lw',w+'px');s.style.setProperty('--lh',h+'px');s.style.setProperty('--pw',Math.max(${S.plate},w+${2 * S.pad})+'px');s.classList.add('fit')`;
 ---
 {src
-  ? <span class:list={['tile', 'img', size, m && 'fit', m?.dark && 'on-dark']} style={style} data-letter={letter}><img src={src} alt={`شعار ${name}`} loading="lazy" decoding="async" referrerpolicy="no-referrer" onload={m ? undefined : fallbackFit} onerror="var s=this.parentNode;s.className=s.className.replace(' img',' mono').replace(' fit','').replace(' on-dark','');s.textContent=s.dataset.letter" /></span>
+  ? <span class:list={['tile', 'img', size, m && 'fit', plate === 'dark' && 'on-dark', plate === 'mid' && 'on-mid']} style={style} data-letter={letter}><img src={src} alt={`شعار ${name}`} loading="lazy" decoding="async" referrerpolicy="no-referrer" onload={m ? undefined : fallbackFit} onerror="var s=this.parentNode;s.className=s.className.replace(' img',' mono').replace(' fit','').replace(' on-dark','').replace(' on-mid','');s.textContent=s.dataset.letter" /></span>
   : <span class:list={['tile', 'mono', size]} style={style} aria-hidden="true">{letter}</span>}

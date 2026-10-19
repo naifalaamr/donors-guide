@@ -12,6 +12,10 @@
     "logos": "node scripts/fetch-logos.mjs"
   },
   "dependencies": {
-    "astro": "7.3.8"
+    "astro": "7.3.8",
+    "cheerio": "1.2.0",
+    "metascraper": "5.58.5",
+    "metascraper-logo": "5.58.4",
+    "metascraper-logo-favicon": "5.58.4"
   }
 }

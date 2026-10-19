@@ -290,6 +290,14 @@ a,button,input,select,label,.card{touch-action:manipulation}
 .tile.img.fit.lg{border-radius:16px}
 .tile.img.fit img{width:var(--lw);height:var(--lh);max-width:none;max-height:none;object-fit:contain}
 .tile.img.on-dark{background:#1B2550;border-color:#1B2550}
+.tile.img.on-mid{background:#6B748A;border-color:#6B748A}
+/* Logo review page (/logos/) */
+.logo-review{width:100%;border-collapse:collapse;font-size:13.5px}
+.logo-review th,.logo-review td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:start;vertical-align:middle}
+.logo-review .on{display:inline-flex;align-items:center;justify-content:center;padding:8px 10px;border-radius:10px;min-width:96px}
+.logo-review .on.l{background:#F4F6FA} .logo-review .on.d{background:#0F1424}
+.logo-review .src{font-size:12px;color:var(--muted);word-break:break-all}
+.logo-review .miss td{color:var(--muted)}
 :root[data-theme="dark"] .tile.img:not(.on-dark){border-color:transparent}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tile.img:not(.on-dark){border-color:transparent}}
 .page-head .card-head{flex-wrap:wrap}

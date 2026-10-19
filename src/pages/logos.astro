@@ -1,0 +1,40 @@
+---
+// Review page for the build-time logo pipeline (scripts/fetch-logos.mjs). Not linked from the menu.
+// Shows each card's logo on a light and a dark page, where it came from, and which plate was chosen,
+// so a wrong discovered logo can be spotted and fixed in src/data/logo-overrides.json.
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Tile from '../components/Tile.astro';
+import { codeOf, withBase } from '../lib/donors';
+type Meta = { plate?: string; dark?: boolean; source?: string; via?: string; src?: string; legible?: number };
+const meta = (Object.values(import.meta.glob('../data/logo-meta.json', { eager: true, import: 'default' }))[0] ?? {}) as Record<string, Meta>;
+const entries = (await getCollection('donors')).sort((a, b) => a.data.code - b.data.code);
+const SOURCE: Record<string, string> = { file: 'ملف في public/logos', override: 'تعديل يدوي', data: 'رابط في البيانات', site: 'اكتُشف من موقع الجهة' };
+const PLATE: Record<string, string> = { light: 'بيضاء', dark: 'داكنة', mid: 'رمادية' };
+const rows = entries.map((e) => ({ e, m: meta[e.id] }));
+const count = (f: (r: (typeof rows)[number]) => boolean) => rows.filter(f).length;
+---
+<Base title="مراجعة الشعارات">
+  <div style="padding-block:24px 56px;display:grid;gap:14px">
+    <h2 style="margin:0">مراجعة الشعارات</h2>
+    <p class="lead" style="margin:0">{`${count((r) => !!r.m)} من ${rows.length} جهة لها شعار محفوظ: ${count((r) => r.m?.source === 'data')} من البيانات، و${count((r) => r.m?.source === 'site')} اكتُشفت من مواقع الجهات، و${count((r) => r.m?.source === 'file' || r.m?.source === 'override')} أُضيفت يدوياً؛ و${count((r) => !r.m)} تظهر بالحرف الأول.`}</p>
+    <p style="margin:0;font-size:13.5px;color:var(--muted)">الشعار الخاطئ يُصحَّح في <code>src/data/logo-overrides.json</code> برابط بديل أو بـ <code>false</code>، أو بوضع ملف باسم الرمز (مثل <code>d47-012.png</code>) في <code>public/logos/</code>.</p>
+    <div class="tablewrap">
+      <table class="logo-review">
+        <thead><tr><th>الرمز</th><th>على صفحة فاتحة</th><th>على صفحة داكنة</th><th>الجهة</th><th>المصدر</th><th>الخلفية</th></tr></thead>
+        <tbody>
+          {rows.map(({ e, m }) => (
+            <tr class:list={[!m && 'miss']}>
+              <td class="mono" style="white-space:nowrap"><a href={withBase(`donors/${e.id}/`)}>{codeOf(e.data.code)}</a></td>
+              <td><span class="on l"><Tile name={e.data.name} type={e.data.type} logo={e.data.logo} id={e.id} /></span></td>
+              <td><span class="on d"><Tile name={e.data.name} type={e.data.type} logo={e.data.logo} id={e.id} /></span></td>
+              <td>{e.data.name}</td>
+              <td>{m ? SOURCE[m.source ?? 'data'] ?? m.source : 'بلا شعار'}{m?.via === 'proxy' ? ' (عبر وسيط)' : ''}{m?.src && /^https?:/.test(m.src) && <div class="src">{m.src}</div>}</td>
+              <td style="white-space:nowrap">{m ? `${PLATE[m.plate ?? (m.dark ? 'dark' : 'light')]}${m.legible != null ? ` · ${Math.round(m.legible * 100)}٪ واضح` : ''}` : '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</Base>
