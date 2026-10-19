@@ -42,6 +42,36 @@ export function grantRange(d: { minGrant: number | null; maxGrant: number | null
   if (a) return `من ${a} ر.س`;
   return 'الحجم غير معلن';
 }
+// Short labels for the three key facts on a directory card (the full text stays on the donor page).
+export function cycleShort(c: string) {
+  return ({ 'بدورات معلنة': 'دورات معلنة', 'مستمر طوال العام': 'طوال العام', 'غير معلن': 'غير معلنة' } as Record<string, string>)[c] ?? c ?? '—';
+}
+export function reachShort(d: { regions: string[]; scope: string }) {
+  const r = d.regions, all = r.includes('جميع المناطق'), out = r.includes('خارج المملكة');
+  if (all && out) return 'المملكة وخارجها';
+  if (all) return 'كل المناطق';
+  if (r.length === 1) return r[0];
+  if (r.length > 1) return `${r[0]} +${r.length - 1}`;
+  return d.scope || '—';
+}
+const parts = (n: number): [string, string] => {
+  if (n >= 1e6) return [String(+(n / 1e6).toFixed(1)), 'مليون'];
+  if (n >= 1e3) { const v = +(n / 1e3).toFixed(1); return [String(v), v >= 3 && v <= 10 ? 'آلاف' : 'ألف']; }
+  return [Number(n).toLocaleString('en-US'), ''];
+};
+const amount = (n: number) => parts(n).join(' ').trim();
+export function sizeShort(d: { minGrant: number | null; maxGrant: number | null }) {
+  const a = d.minGrant, b = d.maxGrant;
+  if (a != null && b != null) {
+    const [x] = parts(a), [y, uy] = parts(b);
+    // same unit on both ends ("30 – 300 ألف"); 3–10 thousand takes the plural, so compare the scale, not the word
+    const scale = (n: number) => (n >= 1e6 ? 2 : n >= 1e3 ? 1 : 0);
+    return scale(a) === scale(b) && scale(a) ? `${x} – ${y} ${uy}` : `${amount(a)} – ${amount(b)}`;
+  }
+  if (b != null) return `حتى ${amount(b)}`;
+  if (a != null) return `من ${amount(a)}`;
+  return '';
+}
 const GENERIC = ['وقف', 'أوقاف', 'مؤسسة', 'المؤسسة', 'صندوق', 'برنامج', 'جمعية', 'بنك', 'شركة', 'منصة', 'الخيرية', 'الأهلية', 'الشيخ', 'الأمير', 'الأميرة', 'والدة', 'لوالدة', 'ابن', 'بن', 'صاحب', 'السمو', 'الملكي', 'سمو'];
 export function letterOf(name: string) {
   const w = String(name || '').replace(/\(.*?\)/g, ' ').split(/\s+/).filter(Boolean);

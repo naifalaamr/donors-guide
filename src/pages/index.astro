@@ -163,6 +163,16 @@ const stats: [string | number, string, string?][] = [
   const rail = document.getElementById('rail')!, tf = document.getElementById('toggleFilters')!;
   tf.addEventListener('click', () => { const o = rail.classList.toggle('open'); tf.setAttribute('aria-expanded', String(o)); });
 
+  // the whole card opens the donor page (the name link is the keyboard/screen-reader target; its ::after
+  // overlay can't cover the card because the name window clips it). Selecting text doesn't navigate.
+  grid.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.closest('a,button,label,input,select')) return;
+    const a = t.closest('[data-card]')?.querySelector<HTMLAnchorElement>('a.stretch');
+    if (!a || getSelection()?.toString()) return;
+    if (e.metaKey || e.ctrlKey) window.open(a.href, '_blank', 'noopener'); else location.href = a.href;
+  });
+
   // compare checkboxes
   const boxes = [...document.querySelectorAll<HTMLInputElement>('input[data-cmp]')];
   const syncBoxes = () => { const ids = readCmp(); boxes.forEach((b) => { b.checked = ids.includes(b.dataset.cmp!); b.disabled = !b.checked && ids.length >= MAX_CMP; }); };
