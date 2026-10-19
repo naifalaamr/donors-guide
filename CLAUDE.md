@@ -28,6 +28,10 @@ Grants Management course (ماجستير إدارة الأوقاف والمنظ�
   plate swallows dark text in two-tone logos); ink #1B2550 (or mid slate) only for transparent logos that are mostly
   white/near-white (<25% legible on white at 2.5:1 and <60% visible at 1.75:1). Review every logo, its source and
   plate at `/logos/` (not in the menu) after each deploy; fix exceptions with a plate override.
+- Letter tiles (cards without a logo, and the placeholder while a logo loads): the first distinctive letter of the
+  name (`letterOf`) drawn as a vector glyph from `src/lib/monogram-glyphs.json`, centred on its own ink box
+  (Alexandria Bold, OFL). Regenerate with `npm run monograms` (scripts/build-monograms.mjs) if the font or box changes.
+  Loading: the letter shows at once, then crossfades to the logo (`.ok` set by the img onload; no JS → logo only).
 
 ## Hard rules
 - NO student names or any student data in `src/data/`, pages, or commits. Raw reports (PDF/DOCX) stay out of the repo (.gitignore).

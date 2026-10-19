@@ -1,5 +1,6 @@
 ---
 import { TYPE, letterOf, withBase } from '../lib/donors';
+import { monogram, MONO_VIEW } from '../lib/monogram';
 interface Props { name: string; type: string; logo?: string | null; size?: 'lg' | 'band'; id?: string }
 const { name, type, logo, size, id } = Astro.props;
 const t = TYPE[type] ?? TYPE.other;
@@ -12,6 +13,7 @@ const plate = m ? (m.plate ?? (m.dark ? 'dark' : 'light')) : 'light';
 const remote = logo ? (/^https?:/i.test(logo) ? logo : withBase('logos/' + logo.replace(/^.*\//, ''))) : null;
 const src = m ? withBase('logos/' + m.file) : remote;
 const letter = letterOf(name);
+const glyph = monogram(letter); // centred vector letter; null → plain text letter
 
 // Logo Soup sizing (sanity-labs/react-logo-soup): width = base · ratio^k, with a mild density correction,
 // so wide wordmarks and square emblems carry the same visual weight. The plate grows sideways for wide logos.
@@ -29,5 +31,12 @@ if (m) {
 const fallbackFit = `var s=this.parentNode,r=this.naturalWidth/this.naturalHeight;if(!r)return;var B=${S.base},w=B*Math.pow(r,0.55),h=w/r,k=Math.min(1,${S.maxH}/h,${S.maxW}/w);w*=k;h*=k;s.style.setProperty('--lw',w+'px');s.style.setProperty('--lh',h+'px');s.style.setProperty('--pw',Math.max(${S.plate},w+${2 * S.pad})+'px');s.classList.add('fit')`;
 ---
 {src
-  ? <span class:list={['tile', 'img', size, m && 'fit', plate === 'dark' && 'on-dark', plate === 'mid' && 'on-mid']} style={style} data-letter={letter}><img src={src} alt={`شعار ${name}`} loading="lazy" decoding="async" referrerpolicy="no-referrer" onload={m ? undefined : fallbackFit} onerror="var s=this.parentNode;s.className=s.className.replace(' img',' mono').replace(' fit','').replace(' on-dark','').replace(' on-mid','');s.textContent=s.dataset.letter" /></span>
-  : <span class:list={['tile', 'mono', size]} style={style} aria-hidden="true">{letter}</span>}
+  ? <span class:list={['tile', 'img', size, m && 'fit', plate === 'dark' && 'on-dark', plate === 'mid' && 'on-mid']} style={style}>
+      {glyph ? <svg class="mg" viewBox={MONO_VIEW} aria-hidden="true"><path d={glyph} /></svg> : <span class="mg" aria-hidden="true">{letter}</span>}
+      <img src={src} alt={`شعار ${name}`} loading="lazy" decoding="async" referrerpolicy="no-referrer"
+        onload={"this.parentNode.classList.add('ok')" + (m ? '' : ';' + fallbackFit)}
+        onerror="var s=this.parentNode;s.className=s.className.replace(' img',' mono').replace(' fit','').replace(' on-dark','').replace(' on-mid','');s.style.removeProperty('--pw');this.remove()" />
+    </span>
+  : <span class:list={['tile', 'mono', size]} style={style} aria-hidden="true">
+      {glyph ? <svg class="mg" viewBox={MONO_VIEW}><path d={glyph} /></svg> : letter}
+    </span>}

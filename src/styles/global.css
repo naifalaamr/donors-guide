@@ -143,6 +143,24 @@ button.chip{cursor:pointer}
 .tile.band.mono{background:var(--surface);color:var(--tc)}
 .tile.band.img{border:0}
 .tile.band.img.fit{width:var(--pw);border-radius:18px}
+/* Letter tiles (no logo) are vector glyphs centred on their own ink box: see scripts/build-monograms.mjs */
+.tile{position:relative}
+.tile .mg{display:block;width:100%;height:100%;fill:currentColor}
+.tile.mono .mg{color:var(--tc)}
+/* Logo loading (design "ب"): the type-coloured letter shows at once; when the logo arrives the letter fades out,
+   the plate turns white/ink and the logo fades in. Without JS (no .js on <html>) the logo simply shows. */
+.tile.img .mg{position:absolute;inset:0;margin:auto;width:auto;aspect-ratio:1;color:var(--tc);opacity:0;display:grid;place-items:center}
+.tile.img img{position:relative}
+html.js .tile.img:not(.ok){background:color-mix(in srgb,var(--tc) 14%,var(--surface));border-color:transparent}
+html.js .tile.band.img:not(.ok){background:var(--surface)}
+html.js .tile.img:not(.ok) .mg{opacity:1}
+html.js .tile.img:not(.ok) img{opacity:0;transform:scale(.94)}
+@media (prefers-reduced-motion:no-preference){
+  .tile.img{transition:background-color .35s ease,border-color .35s ease}
+  .tile.img .mg{transition:opacity .3s ease,transform .3s ease}
+  .tile.img img{transition:opacity .4s ease .05s,transform .4s ease .05s}
+  html.js .tile.img.ok .mg{transform:scale(.9)}
+}
 :root[data-theme="dark"] .tile.band{box-shadow:none;border:1px solid var(--line)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tile.band{box-shadow:none;border:1px solid var(--line)}}
 
