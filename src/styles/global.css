@@ -323,6 +323,10 @@ a,button,input,select,label,.card{touch-action:manipulation}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tile.img:not(.on-dark){border-color:transparent}}
 .page-head .card-head{flex-wrap:wrap}
 .page-head .card-head>div{flex:1 1 220px;min-width:0}
+/* Long names or links must never widen the page on phones: grid/flex children may shrink, long strings wrap */
+.page-head>*{min-width:0}
+.page-head h1{overflow-wrap:anywhere}
+.page-head .site{display:inline-block;max-width:100%;overflow-wrap:anywhere;font-size:14px}
 /* Uniform cards: every card has the same blocks at the same heights */
 .grid{grid-auto-rows:1fr}
 /* Long names: the full name sits in a 2-line window; on hover/focus it scrolls up to show the rest, and back on leave.

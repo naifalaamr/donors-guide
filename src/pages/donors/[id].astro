@@ -18,6 +18,8 @@ const facts = [
   ['نمط التقديم', d.cycle], ['منصة التقديم', d.platform], ['حجم المنحة', grantRange(d)],
 ].filter((x) => x[1]);
 const web = /^https?:\/\//i.test(d.website) ? d.website : '';
+// show only the site's host (the full address is in the link and its title); a bad URL falls back to the raw text
+const webLabel = (() => { try { return new URL(web).hostname.replace(/^www\./, ''); } catch { return web.replace(/^https?:\/\//, ''); } })();
 const linkify = (s: string) => s; // text is rendered as plain text (escaped by Astro)
 ---
 <Base title={d.name} description={d.summary || d.mission} nav="directory">
@@ -28,7 +30,7 @@ const linkify = (s: string) => s; // text is rendered as plain text (escaped by 
   <div class="page-head">
     <div class="row1"><span class="code mono">{codeOf(d.code)}</span><TypeChip type={d.type} /></div>
     <div class="card-head"><Tile name={d.name} type={d.type} logo={d.logo} size="lg" id={entry.id} /><div><h1>{d.name}</h1>
-      {web && <a href={web} target="_blank" rel="noopener" dir="ltr">{web.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a>}</div></div>
+      {web && <a class="site" href={web} target="_blank" rel="noopener" dir="ltr" title={web}>{webLabel}</a>}</div></div>
     {d.summary && <p style="margin:0;max-width:80ch">{d.summary}</p>}
     <div class="actions">
       <button class="btn cmpbtn" type="button" data-cmp-toggle={entry.id} aria-pressed="false">أضف إلى المقارنة</button>
