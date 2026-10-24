@@ -4,6 +4,9 @@ import { withBase } from '../lib/donors';
 interface Props { title?: string; description?: string; nav?: 'directory' | 'compare' | 'submit' | 'about' | null; }
 const { title, description = 'دليل تفاعلي لجهات المنح السعودية: أوقاف ومؤسسات مانحة وجهات حكومية وبرامج مسؤولية اجتماعية، مدروسة على تسعة محاور.', nav = null } = Astro.props;
 const full = title ? `${title} · دليل الجهات المانحة` : 'دليل الجهات المانحة · الدفعة ٤٧';
+// Link previews (WhatsApp, X, Telegram, LinkedIn…) need absolute URLs; SITE/BASE come from the deploy workflow.
+const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL(withBase('og.png'), Astro.site).href;
 const links = [
   ['directory', '', 'الدليل'],
   ['compare', 'compare/', 'المقارنة'],
@@ -24,6 +27,17 @@ const links = [
   <meta property="og:title" content={full} />
   <meta property="og:description" content={description} />
   <meta property="og:locale" content="ar_SA" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="دليل الجهات المانحة · الدفعة ٤٧" />
+  <meta property="og:url" content={pageUrl} />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="شعار دليل الجهات المانحة · الدفعة ٤٧" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content={ogImage} />
+  <link rel="canonical" href={pageUrl} />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" />

@@ -44,6 +44,11 @@ Navy #2F418B, blue #1A97D4 (text #1478AD), green #94C83D; ink #1B2550, bg #F4F6F
 Tokens live in `src/styles/global.css` (light + dark). Brand stripe 6:3:1 navy/blue/green.
 Card codes render with an LRM (`codeOf`) so they read د47-001.
 
+## Link previews
+`src/layouts/Base.astro` sets Open Graph / Twitter tags on every page; the share image is `public/og.png`
+(1200×630 PNG, the directory's own mark, key content inside the central 630px so square crops keep it).
+Replace that file to change the preview; WhatsApp caches previews per URL, so test with a new query (`?v=2`).
+
 ## Search
 Client-side, over `/data/search-index.json` (full text of all axes, normalised by `src/lib/arabic.ts`:
 NFKC, strip tashkeel/tatweel, أإآٱ→ا, ة→ه, ى→ي, ؤ→و, ئ→ي, Arabic-Indic digits→Latin). Fine up to a few hundred cards.
