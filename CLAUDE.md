@@ -37,7 +37,8 @@ Grants Management course (ماجستير إدارة الأوقاف والمنظ�
 
 ## Hard rules
 - Student reports are the only source of card data. A fact the report doesn't give stays empty (shown as unavailable);
-  never fill it from the donor's website or a web search.
+  never fill it from the donor's website or a web search. (Websites, emails and phones added from official sites before
+  this rule, on 9 Oct 2026, are kept on purpose.)
 - NO student names or any student data in `src/data/`, pages, or commits. Raw reports (PDF/DOCX) stay out of the repo (.gitignore).
 - No personal phone numbers of donor staff; only official public contact channels.
 - Do not use or alter the Al-Baha University logo (needs university approval). Use `public/logo.svg` / `logo-dark.svg` (the directory's own mark).
