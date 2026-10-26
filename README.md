@@ -1,10 +1,10 @@
 # دليل الجهات المانحة · الدفعة 47
 
-موقع ثابت مبني بـ Astro من بيانات `src/data/donors.json`.
+موقع ثابت مبني بـ Astro من بيانات `src/data/donors.json`، منشور على https://naifalaamr.github.io/donors-guide/
 
 ## التشغيل على جهازك
 ```bash
-cd "موقع-الدليل"
+cd donors-guide
 npm install
 npm run dev
 ```
@@ -18,7 +18,7 @@ npm run dev
 - `/data/donors.json` و`/data/donors.csv` البيانات للتنزيل.
 
 ## إضافة جهة
-أضف كائناً إلى `src/data/donors.json` برقم `code` التالي و`id` بالصيغة `d47-027`، ثم `npm run build`. يرفض البناء أي حقل غير معروف (مثل اسم الطالب) أو رقم جوال شخصي أو اسماً مكرراً.
+أضف كائناً إلى `src/data/donors.json` برقم `code` التالي و`id` بالصيغة `d47-097`، ثم `npm run build`. يرفض البناء أي حقل غير معروف (مثل اسم الطالب) أو رقم جوال شخصي أو اسماً مكرراً.
 
 ## النشر
-ارفع المجلد إلى مستودع GitHub وفعّل Pages (Source: GitHub Actions)؛ الملف `.github/workflows/deploy.yml` يبني وينشر تلقائياً.
+كل دفع إلى الفرع `main` في المستودع naifalaamr/donors-guide يبني الموقع وينشره على GitHub Pages تلقائياً عبر `.github/workflows/deploy.yml`.
