@@ -82,6 +82,7 @@ const links = [
   </main>
   <footer><div class="wrap">دليل الجهات المانحة · الدفعة 47 · ماجستير إدارة الأوقاف والمنظمات غير الربحية · إعداد: نايف سعيد الزهراني، عمر سالم العتيبي، عثمان محمد الشهري</div></footer>
   <div class="cmpbar" id="cmpBar" hidden></div>
+  <p class="sr-only" id="cmpLive" aria-live="polite"></p>
   <script>
     import { readCmp, onCmpChange } from '../lib/compare-store';
     const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -104,8 +105,13 @@ const links = [
     // compare bar + nav count
     const bar = document.getElementById('cmpBar')!;
     const onComparePage = location.pathname.replace(/\/$/, '').endsWith('/compare');
+    // screen readers hear the new count when it changes (the bar itself appears/disappears, which isn't announced)
+    const live = document.getElementById('cmpLive')!;
+    let lastCount: number | null = null;
     function render() {
       const ids = readCmp();
+      if (lastCount !== null && ids.length !== lastCount) live.textContent = ids.length ? `اخترت ${ids.length} للمقارنة${ids.length >= 4 ? '، وهو الحد الأقصى' : ''}` : 'أُلغي اختيار المقارنة';
+      lastCount = ids.length;
       document.querySelectorAll<HTMLElement>('[data-cmp-count]').forEach((el) => { el.hidden = !ids.length; el.textContent = String(ids.length); });
       if (!ids.length || onComparePage) { bar.hidden = true; return; }
       bar.hidden = false;

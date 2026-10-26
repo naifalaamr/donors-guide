@@ -38,7 +38,7 @@ const ld = JSON.stringify({
   <nav class="crumbs" aria-label="مسار التصفح"><a href={withBase('')}>الدليل</a><span aria-hidden="true">‹</span><span>{d.name}</span></nav>
 
   <div class="page-head">
-    <div class="row1"><span class="code mono">{codeOf(d.code)}</span><TypeChip type={d.type} /></div>
+    <div class="row1"><span class="code mono" translate="no">{codeOf(d.code)}</span><TypeChip type={d.type} /></div>
     <div class="card-head"><Tile name={d.name} type={d.type} logo={d.logo} size="lg" id={entry.id} /><div><h1>{d.name}</h1>
       {web && <a class="site" href={web} target="_blank" rel="noopener" dir="ltr" title={web}>{webLabel}</a>}</div></div>
     {d.summary && <p style="margin:0;max-width:80ch">{d.summary}</p>}
@@ -56,7 +56,7 @@ const ld = JSON.stringify({
           <section class="axis" id={key} aria-labelledby={`h-${key}`}>
             <div class="n" aria-hidden="true">{AR[i]}</div>
             <div>
-              <h4 id={`h-${key}`}>{title}</h4>
+              <h2 id={`h-${key}`}>{title}</h2>
               <div class="q">{q}</div>
               {key === 'orientation' && (d.fields.length + d.regions.length > 0) && (
                 <div class="chips" style="margin-bottom:8px">
@@ -72,7 +72,7 @@ const ld = JSON.stringify({
           </section>
         );
       })}
-      <div class="summary-box"><h4>الخلاصة: أسلوب المنح</h4><div style="white-space:pre-wrap">{d.summary || '—'}</div></div>
+      <div class="summary-box"><h2>الخلاصة: أسلوب المنح</h2><div style="white-space:pre-wrap">{d.summary || '—'}</div></div>
       {d.sources && <div class="sources"><b>المصادر والمقابلات</b>{'\n'}{linkify(d.sources)}</div>}
     </div>
     <aside class="side">

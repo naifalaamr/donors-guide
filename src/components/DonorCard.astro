@@ -26,7 +26,7 @@ const reach = reachShort(d);
   </div>
   <div class="body">
     <h3><a class="stretch" href={withBase(`donors/${entry.id}/`)}><span class="nm">{d.name}</span></a></h3>
-    <div class="sub"><span class="code mono">{codeOf(d.code)}</span>{d.hq && <span class="hq">· {d.hq}</span>}</div>
+    <div class="sub"><span class="code mono" translate="no">{codeOf(d.code)}</span>{d.hq && <span class="hq">· {d.hq}</span>}</div>
     <p class="sum">{d.summary || d.mission}</p>
   </div>
   <ul class="kf">

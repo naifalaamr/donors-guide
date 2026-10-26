@@ -20,6 +20,7 @@ const glyph = monogram(letter); // centred vector letter; null → plain text le
 const S = size === 'lg' ? { base: 52, maxH: 54, maxW: 168, plate: 72, pad: 10 }
   : size === 'band' ? { base: 54, maxH: 52, maxW: 160, plate: 80, pad: 16 } // card band (design B): 80px-high plate
   : { base: 32, maxH: 34, maxW: 66, plate: 76, pad: 5 };
+// 'lg' is the donor page header: above the fold, so it loads first; card and review logos load lazily.
 let style = `--tc:var(${t.color})`;
 if (m) {
   const f = Math.min(1.18, Math.max(0.85, (0.35 / Math.max(m.density, 0.05)) ** 0.3));
@@ -33,7 +34,8 @@ const fallbackFit = `var s=this.parentNode,r=this.naturalWidth/this.naturalHeigh
 {src
   ? <span class:list={['tile', 'img', size, m && 'fit', plate === 'dark' && 'on-dark', plate === 'mid' && 'on-mid']} style={style}>
       {glyph ? <svg class="mg" viewBox={MONO_VIEW} aria-hidden="true"><path d={glyph} /></svg> : <span class="mg" aria-hidden="true">{letter}</span>}
-      <img src={src} alt={`شعار ${name}`} loading="lazy" decoding="async" referrerpolicy="no-referrer"
+      <img src={src} alt={`شعار ${name}`} referrerpolicy="no-referrer"
+        loading={size === 'lg' ? 'eager' : 'lazy'} decoding="async" fetchpriority={size === 'lg' ? 'high' : undefined}
         onload={"this.parentNode.classList.add('ok')" + (m ? '' : ';' + fallbackFit)}
         onerror="var s=this.parentNode;s.className=s.className.replace(' img',' mono').replace(' fit','').replace(' on-dark','').replace(' on-mid','');s.style.removeProperty('--pw');this.remove()" />
     </span>

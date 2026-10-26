@@ -24,9 +24,16 @@ import { withBase } from '../lib/donors';
   function render() {
     const L = readCmp().map((id) => all.find((d) => d.id === id)).filter(Boolean);
     if (!L.length) { box.innerHTML = `<div class="msg info">لم تختر جهات بعد. ارجع إلى <a href="${base}/">الدليل</a> وفعّل «قارن» على البطاقات.</div>`; return; }
-    box.innerHTML = `<div class="tablewrap"><table><thead><tr><th></th>${L.map((d) => `<th><div class="mono" style="font-size:11px;color:var(--muted)">${codeOf(d.code)}</div><a href="${base}/donors/${esc(d.id)}/">${esc(d.name)}</a> <button class="chip x" type="button" data-uncmp="${esc(d.id)}" aria-label="إزالة ${esc(d.name)}"></button></th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr><th scope="row">${esc(r[0])}</th>${L.map((d) => `<td>${esc(r[1](d) || '—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    box.innerHTML = `<div class="tablewrap"><table><thead><tr><th></th>${L.map((d) => `<th><div class="mono" translate="no" style="font-size:11px;color:var(--muted)">${codeOf(d.code)}</div><a href="${base}/donors/${esc(d.id)}/">${esc(d.name)}</a> <button class="chip x" type="button" data-uncmp="${esc(d.id)}" aria-label="إزالة ${esc(d.name)}"></button></th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr><th scope="row">${esc(r[0])}</th>${L.map((d) => `<td>${esc(r[1](d) || '—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
   }
-  box.addEventListener('click', (e) => { const id = (e.target as HTMLElement).closest<HTMLElement>('[data-uncmp]')?.dataset.uncmp; if (id) writeCmp(readCmp().filter((x) => x !== id)); });
+  // removing a column re-renders the table, so put focus on the next remove button (or the link back to the guide)
+  box.addEventListener('click', (e) => {
+    const id = (e.target as HTMLElement).closest<HTMLElement>('[data-uncmp]')?.dataset.uncmp; if (!id) return;
+    const i = [...box.querySelectorAll<HTMLElement>('[data-uncmp]')].findIndex((b) => b.dataset.uncmp === id);
+    writeCmp(readCmp().filter((x) => x !== id)); // renders synchronously via the dg:cmp event
+    const left = box.querySelectorAll<HTMLElement>('[data-uncmp]');
+    (left[Math.min(i, left.length - 1)] ?? box.querySelector<HTMLElement>('a'))?.focus();
+  });
   fetch(base + '/data/donors.json').then((r) => r.json()).then((j) => { all = j.donors; render(); onCmpChange(render); })
-    .catch(() => (box.innerHTML = '<div class="msg err">تعذّر تحميل البيانات.</div>'));
+    .catch(() => (box.innerHTML = '<div class="msg err">تعذّر تحميل البيانات. تحقّق من اتصالك ثم <a href="">أعد تحميل الصفحة</a>.</div>'));
 </script>

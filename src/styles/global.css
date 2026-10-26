@@ -72,7 +72,7 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;font-weight:700
 @media (max-width:900px){.dir{grid-template-columns:minmax(0,1fr)}}
 .rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:grid;gap:14px}
 @media (max-width:900px){.rail{position:static}}
-.rail label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:4px;font-weight:500}
+.rail label,.rail .lbl{display:block;font-size:12.5px;color:var(--muted);margin-bottom:4px;font-weight:500}
 .field{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
 textarea.field{min-height:84px;resize:vertical;line-height:1.7}
 .search{font-size:15px}
@@ -93,12 +93,15 @@ textarea.field{min-height:84px;resize:vertical;line-height:1.7}
 .bar.on .fill{background:var(--accent)}
 .bar.on .name{color:#fff;font-weight:600}
 .bar .n{font-variant-numeric:tabular-nums;color:var(--muted);text-align:center}
+.bar:not(.on):hover .track{box-shadow:inset 0 0 0 1px var(--accent)}
+.bar:hover .n{color:var(--ink)}
 
 .toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
 .toolbar .res{color:var(--muted);font-size:14px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{font-size:12px;padding:2px 9px;border-radius:20px;background:var(--sunk);color:var(--ink);white-space:nowrap;border:0}
 button.chip{cursor:pointer}
+button.chip:hover{background:var(--line)}
 .chip.x::after{content:" ×";opacity:.6}
 
 /* cards */
@@ -188,12 +191,12 @@ dialog::backdrop{background:rgba(6,20,17,.55)}
 .axis{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;padding-block:14px;border-bottom:1px solid var(--line)}
 .axis:last-child{border-bottom:0}
 .axis .n{font-family:var(--f-display);font-size:20px;color:var(--accent);text-align:center;line-height:1.2}
-.axis h4{margin:0 0 2px;font-size:15.5px;font-family:var(--f-display);font-weight:600}
+.axis h2{margin:0 0 2px;font-size:15.5px;font-family:var(--f-display);font-weight:600;line-height:1.7}
 .axis .q{font-size:12px;color:var(--muted);margin-bottom:6px}
 .axis .a{white-space:pre-wrap;overflow-wrap:anywhere}
 .axis .a.none{color:var(--muted);font-style:italic}
 .summary-box{background:var(--accent-soft);border-radius:10px;padding:14px 16px;margin-top:16px}
-.summary-box h4{margin:0 0 4px;font-family:var(--f-display);color:var(--accent-on-soft)}
+.summary-box h2{margin:0 0 4px;font-size:15px;line-height:1.7;font-family:var(--f-display);color:var(--accent-on-soft)}
 .sources{font-size:13px;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:14px}
 .sheet-foot{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;padding:12px 22px;border-top:1px solid var(--line);background:var(--bg)}
 
@@ -276,8 +279,10 @@ a.card{color:inherit;text-decoration:none}
 .pager{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:18px}
 .cmpbtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-on-soft)}
 .theme-btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px;color:var(--ink)}
+.theme-btn:hover{border-color:var(--muted)}
 .idbar .end{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 [hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media print{.idbar .end,.top .nav,.cmpbar,.side .btn,.pager,footer{display:none!important}.detail{grid-template-columns:1fr}body{background:#fff}}
 .card .stretch{color:inherit;text-decoration:none}
 .card .stretch::after{content:"";position:absolute;inset:0;border-radius:inherit}
@@ -315,7 +320,7 @@ a.card{color:inherit;text-decoration:none}
 /* iOS zooms into inputs smaller than 16px; keep fields at 16px on touch screens */
 @media (pointer:coarse),(max-width:900px){.field,.search{font-size:16px}}
 /* Remove the double-tap delay on taps */
-a,button,input,select,label,.card{touch-action:manipulation}
+a,button,input,select,label,.card{touch-action:manipulation;-webkit-tap-highlight-color:rgba(20,120,173,.12)}
 /* Clear keyboard focus on cards (the whole card is the link) */
 .card:has(.stretch:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
 /* Field filter bars: taller targets */

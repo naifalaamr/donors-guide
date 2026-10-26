@@ -49,7 +49,7 @@ const stats: [string | number, string, string?][] = [
         <select class="field" id="fGtype" data-f="gtype"><option value="">الكل</option>{GTYPES.map((t) => <option value={t}>{t}</option>)}</select></div>
       <div class="grp"><label for="fRegion">المنطقة المستهدفة</label>
         <select class="field" id="fRegion" data-f="region"><option value="">كل المناطق</option>{REGIONS.map((t) => <option value={t}>{t}</option>)}</select></div>
-      <div class="grp"><label id="barsLbl">المجالات الأكثر حضوراً</label>
+      <div class="grp"><span class="lbl" id="barsLbl">المجالات الأكثر حضوراً</span>
         <div class="bars" role="group" aria-labelledby="barsLbl">
           {topFields.map(([k, v]) => (
             <button type="button" class="bar" data-field={k} aria-pressed="false">
@@ -72,6 +72,7 @@ const stats: [string | number, string, string?][] = [
           <a class="btn" href={withBase('data/donors.csv')} download="دليل-الجهات-المانحة.csv">تنزيل CSV</a>
         </div>
       </div>
+      <h2 class="sr-only">نتائج الدليل</h2>
       <div class="grid" id="grid">{entries.map((e) => <DonorCard entry={e} />)}</div>
       <div class="more-wrap"><button class="btn" type="button" id="moreBtn" hidden>عرض المزيد</button></div>
       <div class="msg info" id="noRes" hidden>لا توجد جهات تطابق هذه التصفية. جرّب إزالة أحد المرشحات.</div>
@@ -165,13 +166,16 @@ const stats: [string | number, string, string?][] = [
 
   // the whole card opens the donor page (the name link is the keyboard/screen-reader target; its ::after
   // overlay can't cover the card because the name window clips it). Selecting text doesn't navigate.
-  grid.addEventListener('click', (e) => {
+  // Cmd/Ctrl+click and middle-click open a new tab, like a real link.
+  const openCard = (e: MouseEvent, newTab: boolean) => {
     const t = e.target as HTMLElement;
     if (t.closest('a,button,label,input,select')) return;
     const a = t.closest('[data-card]')?.querySelector<HTMLAnchorElement>('a.stretch');
     if (!a || getSelection()?.toString()) return;
-    if (e.metaKey || e.ctrlKey) window.open(a.href, '_blank', 'noopener'); else location.href = a.href;
-  });
+    if (newTab) { e.preventDefault(); window.open(a.href, '_blank', 'noopener'); } else location.href = a.href;
+  };
+  grid.addEventListener('click', (e) => openCard(e, e.metaKey || e.ctrlKey));
+  grid.addEventListener('auxclick', (e) => { if (e.button === 1) openCard(e, true); });
 
   // compare checkboxes
   const boxes = [...document.querySelectorAll<HTMLInputElement>('input[data-cmp]')];
@@ -179,38 +183,42 @@ const stats: [string | number, string, string?][] = [
   boxes.forEach((b) => b.addEventListener('change', () => { if (!toggleCmp(b.dataset.cmp!)) b.checked = false; }));
   onCmpChange(syncBoxes); syncBoxes();
 
-  // one row of field chips per card: chips that don't fit are folded into "+N"
-  function fitChips(card: HTMLElement) {
-    const box = card.querySelector<HTMLElement>('.chips'); if (!box) return;
-    const chips = [...box.querySelectorAll<HTMLElement>('.chip:not(.more)')];
-    const more = box.querySelector<HTMLElement>('.chip.more')!;
-    chips.forEach((c) => (c.hidden = false)); more.hidden = true;
-    const W = box.clientWidth; if (!W) return;
-    const gap = 6, widths = chips.map((c) => c.offsetWidth);
-    more.hidden = false; more.textContent = '+' + chips.length; const mw = more.offsetWidth;
-    let used = 0, n = 0;
-    for (let i = 0; i < chips.length; i++) {
-      const rest = chips.length - i - 1;
-      const need = used + (n ? gap : 0) + widths[i] + (rest ? gap + mw : 0);
-      if (need > W) break;
-      used += (n ? gap : 0) + widths[i]; n++;
-    }
-    chips.forEach((c, i) => (c.hidden = i >= n));
-    const hiddenList = chips.slice(n).map((c) => c.textContent);
-    more.hidden = !hiddenList.length; more.textContent = '+' + hiddenList.length; more.title = hiddenList.join('، ');
+  // Per card: one row of field chips (chips that don't fit fold into "+N"), and for long names how far the name
+  // must scroll inside its 2-line window to show the rest (~45px per second).
+  // Three passes over all cards (reset → measure → apply) so the browser lays out once, not once per card.
+  function fitCards(list: HTMLElement[]) {
+    const items = list.flatMap((card) => {
+      const box = card.querySelector<HTMLElement>('.chips'); if (!box) return [];
+      const h = card.querySelector<HTMLElement>('h3'), nm = h?.querySelector<HTMLElement>('.nm') ?? null;
+      return [{ box, h, nm, chips: [...box.querySelectorAll<HTMLElement>('.chip:not(.more)')], more: box.querySelector<HTMLElement>('.chip.more')! }];
+    });
+    for (const x of items) { x.chips.forEach((c) => (c.hidden = false)); x.more.hidden = false; x.more.textContent = '+' + x.chips.length; }
+    const sizes = items.map((x) => ({ W: x.box.clientWidth, widths: x.chips.map((c) => c.offsetWidth), mw: x.more.offsetWidth, hh: x.h?.clientHeight ?? 0, sh: x.nm?.scrollHeight ?? 0 }));
+    items.forEach((x, k) => {
+      const { W, widths, mw, hh, sh } = sizes[k];
+      if (!W) { x.more.hidden = true; } else {
+        const gap = 6; let used = 0, n = 0;
+        for (let i = 0; i < x.chips.length; i++) {
+          const rest = x.chips.length - i - 1;
+          const need = used + (n ? gap : 0) + widths[i] + (rest ? gap + mw : 0);
+          if (need > W) break;
+          used += (n ? gap : 0) + widths[i]; n++;
+        }
+        x.chips.forEach((c, i) => (c.hidden = i >= n));
+        const hiddenList = x.chips.slice(n).map((c) => c.textContent);
+        x.more.hidden = !hiddenList.length; x.more.textContent = '+' + hiddenList.length; x.more.title = hiddenList.join('، ');
+      }
+      if (x.h && x.nm && hh) {
+        const shift = Math.max(0, sh - hh);
+        x.h.classList.toggle('long', shift > 2);
+        x.h.style.setProperty('--shift', shift + 'px');
+        x.h.style.setProperty('--dur', Math.min(2, Math.max(0.6, shift / 45)).toFixed(2) + 's');
+      }
+    });
   }
-  // long names: how far the name must scroll inside its 2-line window to show the rest (~45px per second)
-  function fitName(card: HTMLElement) {
-    const h = card.querySelector<HTMLElement>('h3'), nm = h?.querySelector<HTMLElement>('.nm'); if (!h || !nm || !h.clientHeight) return;
-    const shift = Math.max(0, nm.scrollHeight - h.clientHeight);
-    h.classList.toggle('long', shift > 2);
-    h.style.setProperty('--shift', shift + 'px');
-    h.style.setProperty('--dur', Math.min(2, Math.max(0.6, shift / 45)).toFixed(2) + 's');
-  }
-  const fitCard = (c: HTMLElement) => { fitChips(c); fitName(c); };
-  const ro = new ResizeObserver((es) => es.forEach((e) => fitCard(e.target.closest('[data-card]') as HTMLElement)));
+  const ro = new ResizeObserver((es) => fitCards(es.map((e) => e.target.closest('[data-card]') as HTMLElement)));
   cards.forEach((c) => { const b = c.querySelector('.chips'); if (b) ro.observe(b); });
-  document.fonts?.ready.then(() => cards.forEach(fitCard));
+  document.fonts?.ready.then(() => fitCards(cards));
   // touch screens: show the rest of a long name once, when the card is well inside the viewport
   if (matchMedia('(hover: none)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const io = new IntersectionObserver((es) => es.forEach((e) => {
