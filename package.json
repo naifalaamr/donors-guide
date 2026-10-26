@@ -9,6 +9,7 @@
     "preview": "astro preview",
     "prebuild": "node scripts/check-data.mjs && node scripts/fetch-logos.mjs",
     "check-data": "node scripts/check-data.mjs",
+    "report": "node scripts/check-data.mjs --report",
     "logos": "node scripts/fetch-logos.mjs",
     "monograms": "node scripts/build-monograms.mjs"
   },

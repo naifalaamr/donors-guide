@@ -6,7 +6,8 @@ Grants Management course (ماجستير إدارة الأوقاف والمنظ�
 ## Commands
 - `npm run dev` — local dev at http://localhost:4321
 - `npm run build` — runs `scripts/check-data.mjs` first, then builds to `dist/`
-- `npm run check-data` — privacy + duplicate check on the data
+- `npm run check-data` — privacy, duplicate, vocab and format check on the data (errors fail the build)
+- `npm run report` — same check, plus every warning and what each card is missing (website, email, phone, grant size…)
 
 ## Data
 - Single source: `src/data/donors.json` (array). One object = one study card.
@@ -16,7 +17,8 @@ Grants Management course (ماجستير إدارة الأوقاف والمنظ�
   tags (fields[], regions[], grantTypes[], access, supportForm, duration, cycle, platform, minGrant, maxGrant),
   the 8 text axes (orientation, types, policies, criteria, size, apply, followup, opportunity), summary, sources.
 - type ∈ waqf | found | gov | csr | fund | other; access ∈ open | invite | mixed | unknown.
-- Use the controlled vocab in `src/lib/donors.ts` (GTYPES, REGIONS) and the field list for tags.
+- Tags use the controlled vocab in `src/lib/vocab.json` (grantTypes, regions + "جميع المناطق", fields; usual values for
+  supportForm, duration, cycle). The site and check-data both read it: add a new value there first or the build fails.
 - Logos (built by `scripts/fetch-logos.mjs` during `npm run build`; output is gitignored):
   1. a file in `public/logos/` named after the card (`d47-012.png|svg|webp|jpg`) wins;
   2. `src/data/logo-overrides.json`: `"d47-012": "https://…"` forces a URL, `"d47-012": false` keeps the letter tile,

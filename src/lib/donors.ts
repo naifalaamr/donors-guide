@@ -1,3 +1,5 @@
+import VOCAB from './vocab.json';
+
 export const TYPES = [
   ['waqf', 'وقف', '--t-waqf'],
   ['found', 'مؤسسة مانحة', '--t-found'],
@@ -16,8 +18,9 @@ export const ACCESS = [
   ['unknown', 'غير معلن'],
 ] as const;
 export const ACC: Record<string, string> = Object.fromEntries(ACCESS);
-export const GTYPES = ['المشروعات', 'التشغيل', 'بناء القدرات', 'البحث', 'الاستثمار الاجتماعي', 'المنح العينية', 'الأوقاف والأصول'];
-export const REGIONS = ['الرياض', 'مكة المكرمة', 'المدينة المنورة', 'الشرقية', 'القصيم', 'عسير', 'تبوك', 'حائل', 'الحدود الشمالية', 'جازان', 'نجران', 'الباحة', 'الجوف', 'خارج المملكة'];
+// Controlled vocab is shared with scripts/check-data.mjs.
+export const GTYPES = VOCAB.grantTypes;
+export const REGIONS = VOCAB.regions;
 export const AXES = [
   ['identity', 'التعريف', 'اسم الجهة، تاريخ التأسيس، الشكل القانوني، المقر، النطاق الجغرافي، الرسالة.'],
   ['orientation', 'توجه المنح', 'الغاية من المنح، المجالات والقضايا والفئات والمناطق المستهدفة، التركيز أو التنويع، والمجالات المستبعدة.'],
