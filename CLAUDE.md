@@ -7,7 +7,7 @@ Grants Management course (ماجستير إدارة الأوقاف والمنظ�
 - `npm run dev` — local dev at http://localhost:4321
 - `npm run build` — runs `scripts/check-data.mjs` first, then builds to `dist/`
 - `npm run check-data` — privacy, duplicate, vocab and format check on the data (errors fail the build)
-- `npm run report` — same check, plus every warning and what each card is missing (website, email, phone, grant size…)
+- `npm run report` — same check, plus every warning and which facts each card lacks (website, email, phone, grant size…)
 
 ## Data
 - Single source: `src/data/donors.json` (array). One object = one study card.
@@ -36,6 +36,8 @@ Grants Management course (ماجستير إدارة الأوقاف والمنظ�
   Loading: the letter shows at once, then crossfades to the logo (`.ok` set by the img onload; no JS → logo only).
 
 ## Hard rules
+- Student reports are the only source of card data. A fact the report doesn't give stays empty (shown as unavailable);
+  never fill it from the donor's website or a web search.
 - NO student names or any student data in `src/data/`, pages, or commits. Raw reports (PDF/DOCX) stay out of the repo (.gitignore).
 - No personal phone numbers of donor staff; only official public contact channels.
 - Do not use or alter the Al-Baha University logo (needs university approval). Use `public/logo.svg` / `logo-dark.svg` (the directory's own mark).

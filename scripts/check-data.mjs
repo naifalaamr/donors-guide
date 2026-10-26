@@ -1,6 +1,7 @@
 // Privacy & quality check for src/data/donors.json. Run: npm run check-data
-// Errors fail the build; warnings and gaps are printed as a one-line count.
-// `npm run report` (--report) lists every warning and what each card is missing.
+// Errors fail the build; warnings and unavailable facts are printed as a one-line count.
+// `npm run report` (--report) lists every warning and which facts each card lacks.
+// Student reports are the only source: a fact they don't give stays empty (unavailable), not a to-do.
 import { readFileSync } from 'node:fs';
 const read = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), 'utf8'));
 const data = read('../src/data/donors.json');
@@ -18,7 +19,7 @@ const AXES = ['orientation', 'types', 'policies', 'criteria', 'size', 'apply', '
 const UNKNOWN = /غير (مذكور|محدد|معلن|منشور|ثابت)|لم يحدد/;
 // name prefix → types it is expected to have (a hint, not a rule)
 const NAME_TYPE = [[/^(وقف|أوقاف)\s/, ['waqf']], [/^(بنك|شركة)\s/, ['csr', 'gov']], [/^صندوق\s/, ['fund', 'gov']]];
-// what a complete card has; label → test that returns true when present
+// facts a card can carry when its report gives them; label → test that returns true when present
 const KEY_FACTS = [
   ['الموقع', (d) => d.website], ['البريد', (d) => d.email], ['الهاتف', (d) => d.phone],
   ['حجم المنحة (رقم)', (d) => d.minGrant != null || d.maxGrant != null],
@@ -68,16 +69,15 @@ for (const d of data) {
 
 if (REPORT) {
   if (warnings.length) console.log(`\nتنبيهات (${warnings.length}):\n` + warnings.map((w) => '  ' + w).join('\n'));
-  console.log(`\nالنواقص حسب المعلومة (من ${data.length} بطاقة):`);
+  console.log(`\nغير متوفر في التقارير، حسب المعلومة (من ${data.length} بطاقة):`);
   for (const [label] of KEY_FACTS) {
     const c = [...gaps.values()].filter((m) => m.includes(label)).length;
     console.log(`  ${label.padEnd(18)} ${String(c).padStart(3)}  ${'█'.repeat(Math.round((c / data.length) * 30))}`);
   }
-  console.log(`\nالنواقص حسب البطاقة (${gaps.size} بطاقة):`);
+  console.log(`\nغير متوفر في التقارير، حسب البطاقة (${gaps.size} بطاقة):`);
   for (const [tag, m] of gaps) console.log(`  ${tag}  ${m.join('، ')}`);
   console.log('');
 }
 if (problems.length) { console.error(problems.map((p) => 'ERROR ' + p).join('\n')); process.exit(1); }
-const complete = data.length - gaps.size;
-console.log(`OK — ${data.length} cards, no student or personal data found. ${complete} complete, ${gaps.size} with gaps, ${warnings.length} warnings` +
+console.log(`OK — ${data.length} cards, no student or personal data found. ${gaps.size} lack some facts their reports don't give, ${warnings.length} warnings` +
   (REPORT ? '.' : ' (npm run report for details).'));
