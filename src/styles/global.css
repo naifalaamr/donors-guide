@@ -60,15 +60,27 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;font-weight:700
 .card-head{display:flex;gap:12px;align-items:center}
 .card-head .t{min-width:0}
 
-/* stats */
-.stats{display:flex;flex-wrap:wrap;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-block:22px}
-.stat{flex:1 1 150px;background:var(--surface);padding:14px 16px;min-width:0}
-.stat .v{font-family:var(--f-display);font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
-.stat .l{font-size:12.5px;color:var(--muted)}
-.stat .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:6px;vertical-align:middle}
 
+/* home header: the title with the directory's counts as one line; single types are filter links */
+.brand.home h1{font-size:clamp(22px,2.6vw,30px)}
+.brand .hstats{display:flex;flex-wrap:wrap;gap:4px 6px;margin:8px 0 0;padding:0;font-size:14px;color:var(--on-deep-2);max-width:none}
+/* phone: keep the type counts, drop the two summary counts, and set the search and the filter button on one row,
+   so the first result starts in the top 60% of the screen */
+@media (max-width:600px){
+  .hstats .minor{display:none!important}
+  .rail{grid-template-columns:minmax(0,1fr) auto;align-items:end;column-gap:8px}
+  .rail>.grp{grid-column:1/-1}
+  .rail .btn.filters-mobile{min-height:44px}
+}
+.hstats>*{display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border:1px solid transparent;border-radius:999px;white-space:nowrap}
+.hstats b{color:var(--on-deep);font-weight:600}
+.hstats a{color:var(--on-deep-2);text-decoration:none;border-color:rgba(255,255,255,.3)}
+.hstats a:hover{border-color:var(--on-deep)}
+.hstats a[aria-current]{background:var(--on-deep);border-color:var(--on-deep);color:var(--deep)}
+.hstats a[aria-current] b{color:var(--deep)}
+.hstats .dot{width:10px;height:10px;border-radius:50%;flex:none;border:2px solid var(--on-deep)}
 /* directory layout */
-.dir{display:grid;grid-template-columns:270px minmax(0,1fr);gap:24px;align-items:start;padding-bottom:48px}
+.dir{display:grid;grid-template-columns:270px minmax(0,1fr);gap:24px;align-items:start;padding-bottom:48px;margin-top:22px}
 @media (max-width:900px){.dir{grid-template-columns:minmax(0,1fr)}}
 .rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:grid;gap:14px}
 @media (max-width:900px){.rail{position:static}}
@@ -113,9 +125,19 @@ button.chip:hover{background:var(--line)}
 .type{font-size:12px;font-weight:600;padding:2px 9px;border-radius:20px;color:var(--tc);background:color-mix(in srgb,var(--tc) 13%,transparent);white-space:nowrap}
 .access{font-weight:600}
 .access.open{color:var(--ok)} .access.invite{color:var(--warn)} .access.mixed{color:var(--t-found)}
-.card .cband{position:relative;height:136px;display:grid;place-items:center;padding-top:24px;background:color-mix(in srgb,var(--tc) 9%,var(--surface))}
-.card .cband .type{position:absolute;top:10px;inset-inline-start:10px;background:var(--surface);font-weight:500}
-.card .st{position:absolute;top:10px;inset-inline-end:10px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:2px 9px;border-radius:20px;background:var(--surface);white-space:nowrap;color:var(--muted)}
+.card .cband{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:color-mix(in srgb,var(--tc) 9%,var(--surface))}
+.card .cband .type{background:var(--surface);font-weight:500}
+.card .st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:2px 9px;border-radius:20px;background:var(--surface);white-space:nowrap;color:var(--muted)}
+/* Card head: the logo plate centred at the top, the name and its code centred under it; the summary, facts and
+   chips below keep the start edge. */
+.card .head{display:flex;flex-direction:column;align-items:center;gap:10px;min-width:0;text-align:center}
+.card .head .t{width:100%;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px}
+.card .head h3{width:100%}
+.card .head .sub{justify-content:center;max-width:100%}
+.tile.md{width:64px;height:64px;border-radius:16px;font-size:28px}
+/* the letter keeps its type colour; the plate stays neutral like a logo plate (no tinted square) */
+.tile.md.mono,html.js .tile.md.img:not(.ok){background:var(--surface);border:1px solid var(--line)}
+.tile.img.fit.md{border-radius:16px}
 .card .st .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
 .card .st.open{color:var(--ok)} .card .st.mixed{color:var(--accent)} .card .st.invite{color:var(--warn)}
 .card .body{padding:14px 16px 4px;display:flex;flex-direction:column;gap:4px}
@@ -123,13 +145,15 @@ button.chip:hover{background:var(--line)}
 .card .sub .code{font-size:12px}
 .card .sub .hq{overflow:hidden;text-overflow:ellipsis}
 .card .sum{margin:4px 0 0;font-size:14px;line-height:1.7;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:3.4em}
-.card .kf{list-style:none;margin:8px 16px 0;padding:10px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+/* facts and chips are pinned together to the card's foot, so they line up across a row of cards;
+   the slack of a one-line name or a short summary sits above them */
+.card .kf{list-style:none;margin:auto 16px 0;padding:10px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .card .kf li{display:flex;flex-direction:column;gap:2px;min-width:0}
 .card .kf svg{width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-bottom:2px}
 .card .kf .l{font-size:11.5px;color:var(--muted);line-height:1.4}
-.card .kf .v{font-size:13px;font-weight:500;line-height:1.45}
+.card .kf .v{font-size:13px;font-weight:500;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* one line, so the facts row lines up across cards; the full value is in its title */
 .card .kf .v.none{color:var(--muted);font-weight:400}
-.card .cfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 16px 14px;margin-top:auto}
+.card .cfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 16px 14px}
 .card .cfoot .chips{flex:1;min-width:0}
 .card .cmpbox{position:relative;z-index:1;flex:none;width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);cursor:pointer}
 .card .cmpbox input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
@@ -141,11 +165,6 @@ button.chip:hover{background:var(--line)}
 .card .cmpbox:has(input:checked) .i-add{display:none}
 .card .cmpbox:has(input:disabled){opacity:.45;cursor:not-allowed}
 .card .cmpbox:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
-/* logo plate inside the band */
-.tile.band{width:80px;height:80px;border-radius:18px;font-size:32px;box-shadow:0 1px 2px rgba(27,37,80,.08)}
-.tile.band.mono{background:var(--surface);color:var(--tc)}
-.tile.band.img{border:0}
-.tile.band.img.fit{width:var(--pw);border-radius:18px}
 /* Letter tiles (no logo) are vector glyphs centred on their own ink box: see scripts/build-monograms.mjs */
 .tile{position:relative}
 .tile .mg{display:block;width:100%;height:100%;fill:currentColor}
@@ -155,7 +174,6 @@ button.chip:hover{background:var(--line)}
 .tile.img .mg{position:absolute;inset:0;margin:auto;width:auto;aspect-ratio:1;color:var(--tc);opacity:0;display:grid;place-items:center}
 .tile.img img{position:relative}
 html.js .tile.img:not(.ok){background:color-mix(in srgb,var(--tc) 14%,var(--surface));border-color:transparent}
-html.js .tile.band.img:not(.ok){background:var(--surface)}
 html.js .tile.img:not(.ok) .mg{opacity:1}
 html.js .tile.img:not(.ok) img{opacity:0;transform:scale(.94)}
 @media (prefers-reduced-motion:no-preference){
@@ -164,8 +182,6 @@ html.js .tile.img:not(.ok) img{opacity:0;transform:scale(.94)}
   .tile.img img{transition:opacity .4s ease .05s,transform .4s ease .05s}
   html.js .tile.img.ok .mg{transform:scale(.9)}
 }
-:root[data-theme="dark"] .tile.band{box-shadow:none;border:1px solid var(--line)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tile.band{box-shadow:none;border:1px solid var(--line)}}
 
 /* empty */
 .empty{border:1.5px dashed var(--line);border-radius:var(--r);padding:28px;display:grid;gap:18px;grid-template-columns:minmax(0,1fr) minmax(0,320px);align-items:center;background:var(--surface)}
@@ -195,8 +211,6 @@ dialog::backdrop{background:rgba(6,20,17,.55)}
 .axis .q{font-size:12px;color:var(--muted);margin-bottom:6px}
 .axis .a{white-space:pre-wrap;overflow-wrap:anywhere}
 .axis .a.none{color:var(--muted);font-style:italic}
-.summary-box{background:var(--accent-soft);border-radius:10px;padding:14px 16px;margin-top:16px}
-.summary-box h2{margin:0 0 4px;font-size:15px;line-height:1.7;font-family:var(--f-display);color:var(--accent-on-soft)}
 .sources{font-size:13px;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:14px}
 .sheet-foot{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;padding:12px 22px;border-top:1px solid var(--line);background:var(--bg)}
 
@@ -293,7 +307,7 @@ a.card{color:inherit;text-decoration:none}
 
 /* UX pass — Oct 2026 */
 /* Detail page: comfortable reading measure and size for long axis text */
-.axis .a,.summary-box>div{max-width:70ch;font-size:15.5px;line-height:1.85}
+.axis .a{max-width:70ch;font-size:15.5px;line-height:1.85}
 /* Jumping from the axes list highlights the target axis */
 .axis:target{background:var(--accent-soft);border-radius:8px;box-shadow:0 0 0 10px var(--accent-soft)}
 /* Desktop: facts scroll away, the axes list stays in view */
@@ -305,13 +319,6 @@ a.card{color:inherit;text-decoration:none}
 /* Mobile detail: axes come right after the summary card; quick facts follow them.
    The axes list is hidden on small screens, where it would sit after the content. */
 @media (max-width:900px){.detail .side{order:1}.detail .side>.panel{display:none}}
-/* Mobile home: compact stats so search appears above the fold */
-@media (max-width:600px){
-  .stats{margin-block:16px}
-  .stat{flex-basis:100px;padding:10px 12px}
-  .stat .v{font-size:22px}
-  .stat .l{font-size:11.5px;line-height:1.4}
-}
 /* Cards: easier-to-read summary, clearer hover */
 .card:hover{border-color:var(--accent)}
 @media (prefers-reduced-motion:reduce){.card:hover{transform:none}}
@@ -326,7 +333,7 @@ a,button,input,select,label,.card{touch-action:manipulation;-webkit-tap-highligh
 /* Field filter bars: taller targets */
 .bar .track{height:28px}.bar .name{line-height:28px}
 /* 84+ cards: let the browser skip rendering off-screen ones */
-.grid>.card{content-visibility:auto;contain-intrinsic-size:auto 430px}
+.grid>.card{content-visibility:auto;contain-intrinsic-size:auto 330px}
 /* "Show more" under the results grid */
 .more-wrap{display:flex;justify-content:center;margin-top:20px}
 .more-wrap .btn{min-height:44px;padding-inline:24px}
@@ -350,18 +357,25 @@ a,button,input,select,label,.card{touch-action:manipulation;-webkit-tap-highligh
 /* Long names or links must never widen the page on phones: grid/flex children may shrink, long strings wrap */
 .page-head>*{min-width:0}
 .page-head h1{overflow-wrap:anywhere}
+.page-head .alias{margin:2px 0 0;color:var(--muted);font-size:15px;line-height:1.5}
+.page-head .summary{margin:0;max-width:80ch}
+.page-head .summary b{font-weight:600}
+/* Phone: the name takes the full width under its logo, so a long official name keeps to fewer lines */
+@media (max-width:600px){.page-head .card-head>div{flex-basis:100%}.page-head h1{font-size:22px}}
 .page-head .site{display:inline-block;max-width:100%;overflow-wrap:anywhere;font-size:14px}
 /* Uniform cards: every card has the same blocks at the same heights */
 .grid{grid-auto-rows:1fr}
 /* Long names: the full name sits in a 2-line window; on hover/focus it scrolls up to show the rest, and back on leave.
    --shift / --dur are set per card by fitName() in index.astro. Touch screens keep the 2-line view (full name on the donor page). */
-.card h3{font-size:17px;line-height:1.35;height:2.7em;overflow:hidden;position:relative}
+/* a two-line slot for every name, so the code and summary line up across a row; a one-line name sits in its middle
+   ("safe" falls back to the top when a long name overflows, which the scroll below then reveals) */
+.card h3{font-size:17px;line-height:1.35;height:2.7em;overflow:hidden;position:relative;display:flex;flex-direction:column;justify-content:safe center}
 .card h3 .stretch{display:block}
 .card h3 .nm{display:block;text-wrap:balance;transition:transform var(--dur,0s) ease-in-out .25s}
-.card h3.long{-webkit-mask-image:linear-gradient(#000 calc(100% - .55em),transparent);mask-image:linear-gradient(#000 calc(100% - .55em),transparent)}
+.card h3.long{-webkit-mask-image:linear-gradient(#000 calc(100% - .55em),transparent);mask-image:linear-gradient(#000 calc(100% - .55em),transparent)} /* taste-skill-ignore: a mask that fades the clipped end of a long name, not a fill */
 @media (hover:hover){
   .card:hover h3.long .nm,.card:focus-within h3.long .nm{transform:translateY(calc(-1 * var(--shift,0px)))}
-  .card:hover h3.long,.card:focus-within h3.long{-webkit-mask-image:linear-gradient(transparent,#000 .55em);mask-image:linear-gradient(transparent,#000 .55em)}
+  .card:hover h3.long,.card:focus-within h3.long{-webkit-mask-image:linear-gradient(transparent,#000 .55em);mask-image:linear-gradient(transparent,#000 .55em)} /* taste-skill-ignore: the same name mask */
 }
 .card:focus-within h3.long .nm{transform:translateY(calc(-1 * var(--shift,0px)))}
 /* Touch screens (no hover): each long name plays once when its card scrolls into view */

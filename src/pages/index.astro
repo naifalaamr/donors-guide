@@ -12,26 +12,24 @@ const fieldCount: Record<string, number> = {};
 L.forEach((d) => d.fields.forEach((f) => (fieldCount[f] = (fieldCount[f] || 0) + 1)));
 const topFields = Object.entries(fieldCount).sort((a, b) => b[1] - a[1]).slice(0, 9);
 const maxF = topFields[0]?.[1] || 1;
-const stats: [string | number, string, string?][] = [
-  [n, 'جهة مانحة في الدليل'],
-  [c('waqf'), 'وقف', '--t-waqf'],
-  [c('found'), 'مؤسسة مانحة', '--t-found'],
-  [c('gov'), 'جهة حكومية', '--t-gov'],
-  [c('csr') + c('fund') + c('other'), 'شركات وصناديق وغيرها', '--t-csr'],
-  [n ? Math.round((open / n) * 100) + '%' : '—', 'تتيح التقديم المفتوح'],
-  [Object.keys(fieldCount).length, 'مجالاً مغطى'],
+// The counts sit in the header as one line; each single type is also a filter link (works without JS too).
+const typeStats: [string, number, string, string][] = [
+  ['waqf', c('waqf'), 'وقف', '--t-waqf'],
+  ['found', c('found'), 'مؤسسة مانحة', '--t-found'],
+  ['gov', c('gov'), 'جهة حكومية', '--t-gov'],
 ];
+const restCount = c('csr') + c('fund') + c('other');
 ---
 <Base nav="directory">
-  <div class="brand" slot="hero">
+  <div class="brand home" slot="hero">
     <h1>استكشف الجهات المانحة</h1>
-    <p>أوقاف ومؤسسات مانحة وجهات حكومية وبرامج مسؤولية اجتماعية، درسها طلاب الدفعة على محاور بطاقة الدراسة.</p>
-  </div>
-
-  <div class="stats">
-    {stats.map(([v, l, col]) => (
-      <div class="stat"><div class="v">{v}</div><div class="l">{col && <span class="dot" style={`background:var(${col})`} />}{l}</div></div>
-    ))}
+    <p class="hstats">
+      <span><b class="num">{n}</b> جهة مانحة</span>
+      {typeStats.map(([t, v, l, col]) => <a href={`?type=${t}`} data-type-link={t}><span class="dot" style={`background:var(${col})`} /><b class="num">{v}</b> {l}</a>)}
+      {restCount > 0 && <span><span class="dot" style="background:var(--t-csr)" /><b class="num">{restCount}</b> شركات وصناديق وغيرها</span>}
+      <span class="minor"><b class="num">{n ? Math.round((open / n) * 100) : 0}%</b> تتيح التقديم المفتوح أو المختلط</span>
+      <span class="minor"><b class="num">{Object.keys(fieldCount).length}</b> مجالاً</span>
+    </p>
   </div>
 
   <div class="dir" style="padding-bottom:64px">
@@ -91,6 +89,7 @@ const stats: [string | number, string, string?][] = [
   const sortSel = document.getElementById('sort') as HTMLSelectElement;
   const selects = [...document.querySelectorAll<HTMLSelectElement>('select[data-f]')];
   const bars = [...document.querySelectorAll<HTMLButtonElement>('.bar')];
+  const typeLinks = [...document.querySelectorAll<HTMLAnchorElement>('[data-type-link]')];
   const LABEL: Record<string, string> = {};
   selects.forEach((s) => [...s.options].forEach((o) => (LABEL[s.dataset.f + ':' + o.value] = o.text)));
 
@@ -137,6 +136,7 @@ const stats: [string | number, string, string?][] = [
     document.getElementById('resCount')!.textContent = `${shown} من ${cards.length} جهة` + (left > 0 ? ` · يُعرض ${limit}` : '');
     document.getElementById('noRes')!.hidden = shown > 0;
     bars.forEach((b) => { const on = b.dataset.field === f.field; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    typeLinks.forEach((a) => { if (a.dataset.typeLink === f.type) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
     const chips: [string, string][] = [];
     (['type', 'access', 'gtype', 'region'] as const).forEach((k) => { if (f[k]) chips.push([k, LABEL[k + ':' + f[k]] || f[k]]); });
     if (f.field) chips.push(['field', f.field]);
@@ -157,6 +157,14 @@ const stats: [string | number, string, string?][] = [
   selects.forEach((s) => s.addEventListener('change', () => { (f as any)[s.dataset.f!] = s.value; apply(); }));
   sortSel.addEventListener('change', () => { f.sort = sortSel.value; apply(); });
   bars.forEach((b) => b.addEventListener('click', () => { f.field = f.field === b.dataset.field ? '' : b.dataset.field!; apply(); }));
+  // header counts filter in place (a second click clears); plain links keep Cmd/Ctrl-click and no-JS working
+  typeLinks.forEach((a) => a.addEventListener('click', (e) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault();
+    f.type = f.type === a.dataset.typeLink ? '' : a.dataset.typeLink!;
+    const s = selects.find((x) => x.dataset.f === 'type'); if (s) s.value = f.type;
+    apply();
+  }));
   document.getElementById('activeChips')!.addEventListener('click', (e) => {
     const k = (e.target as HTMLElement).closest<HTMLElement>('[data-clear]')?.dataset.clear; if (!k) return;
     (f as any)[k] = ''; const s = selects.find((x) => x.dataset.f === k); if (s) s.value = ''; apply();

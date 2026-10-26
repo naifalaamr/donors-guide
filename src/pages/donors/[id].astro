@@ -19,6 +19,11 @@ const facts = [
 ];
 // Student reports are the only source: a fact the report doesn't give is shown as unavailable, not hidden.
 const NA = 'غير متوفر في التقرير';
+// A name ending in "(…)" shows the part before it as the title and the bracketed part (the common or the full
+// official name, as the report gives it) on a smaller line under it, so the title stays short on phones.
+const nameParts = d.name.match(/^(.+?)\s*\((.+)\)\s*$/);
+const title = nameParts ? nameParts[1] : d.name;
+const alias = nameParts ? nameParts[2] : '';
 const web = /^https?:\/\//i.test(d.website) ? d.website : '';
 // show only the site's host (the full address is in the link and its title); a bad URL falls back to the raw text
 const webLabel = (() => { try { return new URL(web).hostname.replace(/^www\./, ''); } catch { return web.replace(/^https?:\/\//, ''); } })();
@@ -39,9 +44,9 @@ const ld = JSON.stringify({
 
   <div class="page-head">
     <div class="row1"><span class="code mono" translate="no">{codeOf(d.code)}</span><TypeChip type={d.type} /></div>
-    <div class="card-head"><Tile name={d.name} type={d.type} logo={d.logo} size="lg" id={entry.id} /><div><h1>{d.name}</h1>
+    <div class="card-head"><Tile name={d.name} type={d.type} logo={d.logo} size="lg" id={entry.id} /><div><h1>{title}</h1>{alias && <p class="alias">{alias}</p>}
       {web && <a class="site" href={web} target="_blank" rel="noopener" dir="ltr" title={web}>{webLabel}</a>}</div></div>
-    {d.summary && <p style="margin:0;max-width:80ch">{d.summary}</p>}
+    {d.summary && <p class="summary"><b>الخلاصة: </b>{d.summary}</p>}
     <div class="actions">
       <button class="btn cmpbtn" type="button" data-cmp-toggle={entry.id} aria-pressed="false">أضف إلى المقارنة</button>
       <button class="btn ghost" type="button" onclick="window.print()">طباعة البطاقة</button>
@@ -72,7 +77,6 @@ const ld = JSON.stringify({
           </section>
         );
       })}
-      <div class="summary-box"><h2>الخلاصة: أسلوب المنح</h2><div style="white-space:pre-wrap">{d.summary || '—'}</div></div>
       {d.sources && <div class="sources"><b>المصادر والمقابلات</b>{'\n'}{linkify(d.sources)}</div>}
     </div>
     <aside class="side">

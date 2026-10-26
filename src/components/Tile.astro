@@ -1,7 +1,7 @@
 ---
 import { TYPE, letterOf, withBase } from '../lib/donors';
 import { monogram, MONO_VIEW } from '../lib/monogram';
-interface Props { name: string; type: string; logo?: string | null; size?: 'lg' | 'band'; id?: string }
+interface Props { name: string; type: string; logo?: string | null; size?: 'lg' | 'md'; id?: string }
 const { name, type, logo, size, id } = Astro.props;
 const t = TYPE[type] ?? TYPE.other;
 // logo-meta.json is written by scripts/fetch-logos.mjs at build time (may be absent locally).
@@ -18,15 +18,17 @@ const glyph = monogram(letter); // centred vector letter; null → plain text le
 // Logo Soup sizing (sanity-labs/react-logo-soup): width = base · ratio^k, with a mild density correction,
 // so wide wordmarks and square emblems carry the same visual weight. The plate grows sideways for wide logos.
 const S = size === 'lg' ? { base: 52, maxH: 54, maxW: 168, plate: 72, pad: 10 }
-  : size === 'band' ? { base: 54, maxH: 52, maxW: 160, plate: 80, pad: 16 } // card band (design B): 80px-high plate
+  : size === 'md' ? { base: 44, maxH: 44, maxW: 132, plate: 64, pad: 10 } // directory card: 64px plate centred over the name (not 'card': that class is the card itself)
   : { base: 32, maxH: 34, maxW: 66, plate: 76, pad: 5 };
 // 'lg' is the donor page header: above the fold, so it loads first; card and review logos load lazily.
 let style = `--tc:var(${t.color})`;
+let dims: { width: number; height: number } | undefined; // the img's intrinsic size, so the plate never shifts as it loads
 if (m) {
   const f = Math.min(1.18, Math.max(0.85, (0.35 / Math.max(m.density, 0.05)) ** 0.3));
   let w = S.base * m.ratio ** 0.55 * f, h = w / m.ratio;
   const k = Math.min(1, S.maxH / h, S.maxW / w); w *= k; h *= k;
   style += `;--lw:${w.toFixed(1)}px;--lh:${h.toFixed(1)}px;--pw:${Math.max(S.plate, w + 2 * S.pad).toFixed(1)}px`;
+  dims = { width: Math.round(w), height: Math.round(h) };
 }
 // Remote logo the build couldn't store: size by its aspect ratio once it loads (no density/contrast data).
 const fallbackFit = `var s=this.parentNode,r=this.naturalWidth/this.naturalHeight;if(!r)return;var B=${S.base},w=B*Math.pow(r,0.55),h=w/r,k=Math.min(1,${S.maxH}/h,${S.maxW}/w);w*=k;h*=k;s.style.setProperty('--lw',w+'px');s.style.setProperty('--lh',h+'px');s.style.setProperty('--pw',Math.max(${S.plate},w+${2 * S.pad})+'px');s.classList.add('fit')`;
@@ -34,7 +36,7 @@ const fallbackFit = `var s=this.parentNode,r=this.naturalWidth/this.naturalHeigh
 {src
   ? <span class:list={['tile', 'img', size, m && 'fit', plate === 'dark' && 'on-dark', plate === 'mid' && 'on-mid']} style={style}>
       {glyph ? <svg class="mg" viewBox={MONO_VIEW} aria-hidden="true"><path d={glyph} /></svg> : <span class="mg" aria-hidden="true">{letter}</span>}
-      <img src={src} alt={`شعار ${name}`} referrerpolicy="no-referrer"
+      <img src={src} alt={`شعار ${name}`} referrerpolicy="no-referrer" {...dims}
         loading={size === 'lg' ? 'eager' : 'lazy'} decoding="async" fetchpriority={size === 'lg' ? 'high' : undefined}
         onload={"this.parentNode.classList.add('ok')" + (m ? '' : ';' + fallbackFit)}
         onerror="var s=this.parentNode;s.className=s.className.replace(' img',' mono').replace(' fit','').replace(' on-dark','').replace(' on-mid','');s.style.removeProperty('--pw');this.remove()" />
